@@ -1,6 +1,7 @@
 import Login from "../../Auth/Login/Login";
 import Register from "../../Auth/Register/Register";
 import Home from "../../Home/Home/Home";
+import { SpendingTable } from "../../Spending/SpendingTable/SpendingTable";
 import "./Routing.css";
 import {
   Navigate,
@@ -14,12 +15,12 @@ function Routing(): JSX.Element {
       <Routes>
         <Route path="/home" element={<Home />} />
         <Route
-          path="/register"
-          element={<Register />}
-        />
-        <Route
           path="/login"
           element={<Login />}
+        />
+        <Route
+          path="/spending-table"
+          element={<SpendingTable />}
         />
         <Route
           path="/"

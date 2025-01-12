@@ -4,12 +4,17 @@ import {
   DollarOutlined,
   HomeOutlined,
   SettingOutlined,
-  UserAddOutlined,
   LoginOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Menu } from "antd";
 import { useNavigate } from "react-router-dom";
+import {
+  authStore,
+  AuthActionType,
+} from "../../../Redux/AuthState";
+import { auth } from "../../../../firebase-config";
+import notifyService from "../../../Services/NotifyService";
 
 function Header(): JSX.Element {
   const navigate = useNavigate();
@@ -18,18 +23,12 @@ function Header(): JSX.Element {
     Required<MenuProps>["items"][number];
 
   const [current, setCurrent] = useState("home");
-  const [loggedIn, setLoggedIn] = useState(false);
 
   const menu: MenuItem[] = [
     {
       label: "בית",
       key: "home",
       icon: <HomeOutlined />,
-    },
-    {
-      label: "הרשמה",
-      key: "register",
-      icon: <UserAddOutlined />,
     },
     {
       label: "התחברות",
@@ -45,8 +44,8 @@ function Header(): JSX.Element {
       icon: <HomeOutlined />,
     },
     {
-      label: "רשימת הוצאות",
-      key: "list",
+      label: "טבלת הוצאות",
+      key: "spending-table",
       icon: <DollarOutlined />,
     },
     {
@@ -56,27 +55,34 @@ function Header(): JSX.Element {
       children: [
         {
           label: "משתמש",
-          key: "setting:1",
+          key: "user-settings",
         },
 
-        { label: "קטגוריות", key: "setting:2" },
-        {
-          label: "התנתק",
-          key: "setting:3",
-        },
+        { label: "קטגוריות", key: "categories" },
       ],
+    },
+    {
+      label: "התנתק",
+      key: "logout",
+      icon: <LoginOutlined />,
     },
   ];
 
   const onClick: MenuProps["onClick"] = (e) => {
-    console.log("click ", e);
+    if (e.key === "logout") {
+      authStore.dispatch({
+        type: AuthActionType.Logout,
+      });
+      navigate("/home");
+      return;
+    }
     navigate("/" + e.key);
     setCurrent(e.key);
   };
 
   return (
     <div className="Header">
-      {loggedIn ? (
+      {authStore.getState().user ? (
         <>
           <Menu
             onClick={onClick}
