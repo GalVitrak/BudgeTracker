@@ -22,7 +22,7 @@ function Header(): JSX.Element {
   type MenuItem =
     Required<MenuProps>["items"][number];
 
-  const [current, setCurrent] = useState("home");
+  const [current, setCurrent] = useState(window.location.pathname.slice(1));
 
   const menu: MenuItem[] = [
     {

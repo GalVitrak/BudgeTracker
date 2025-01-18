@@ -10,6 +10,9 @@ const addSpending = functions.https.onCall(
     const date: Timestamp = Timestamp.fromDate(
       new Date(data.date)
     );
+    const year = date.toDate().getFullYear();
+    const month = date.toDate().getMonth() + 1;
+
     const sum = data.sum;
     const note = data.note;
 
@@ -19,6 +22,8 @@ const addSpending = functions.https.onCall(
         category: category,
         subCategory: subCategory,
         date: date,
+        year: year,
+        month: month,
         sum: sum,
         note: note,
         uid: uid,

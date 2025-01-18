@@ -11,6 +11,11 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { AddSpending } from "../AddSpending/AddSpending";
+import { collection } from "firebase/firestore";
+import { db } from "../../../../firebase-config";
+import { AddCategory } from "../AddCategory/AddCategory";
+import CategoryModel from "../../../Models/CategoryModel";
+import { AddSubCategory } from "../AddSubCategory/AddSubCategory";
 
 export function SpendingTable(): JSX.Element {
   const [loading, setLoading] = useState(false);
@@ -32,6 +37,8 @@ export function SpendingTable(): JSX.Element {
   const [spending, setSpending] =
     useState<SpendingModel>();
 
+  // const spendingRef = collection(db, "spendings");
+
   useEffect(() => {
     setLoading(true);
     spendingsService
@@ -39,6 +46,9 @@ export function SpendingTable(): JSX.Element {
       .then((spendings) => {
         setSpendings(spendings);
         setLoading(false);
+        if (spendings.length === 0) {
+          notifyService.info("לא נמצאו הוצאות");
+        }
       })
       .catch((error) => {
         notifyService.error(error);
@@ -117,56 +127,106 @@ export function SpendingTable(): JSX.Element {
 
   return (
     <div className="SpendingTable">
-      <div className="table">
+      <div className="table-header">
         <div className="add-spending">
-          <button
-            onClick={() => {
-              setAddModalOpen(true);
-              // a function that adds a spending
-            }}
-          >
-            הוסף הוצאה
-            <PlusOutlined />
-          </button>
+          <div className="input-group">
+            <button
+              className="input"
+              onClick={() => {
+                setAddModalOpen(true);
+                // a function that adds a spending
+              }}
+            >
+              הוספת הוצאה
+              {/* <PlusOutlined /> */}
+            </button>
+          </div>
 
-          <button
-            onClick={() => {
-              setAddCategoryModalOpen(true);
-              // a function that adds a category
-            }}
-          >
-            הוסף קטגוריה
-            <PlusOutlined />
-          </button>
-
-          <button
-            onClick={() => {
-              setAddSubCategoryModalOpen(true);
-              // a function that adds a sub-category
-            }}
-          >
-            הוסף תת-קטגוריה
-            <PlusOutlined />
-          </button>
+          <div className="input-group">
+            <button
+              className="input"
+              onClick={() => {
+                setAddCategoryModalOpen(true);
+                // a function that adds a category
+              }}
+            >
+              הוספת קטגוריה
+              {/* <PlusOutlined /> */}
+            </button>
+          </div>
+          <div className="input-group">
+            <button
+              className="input"
+              onClick={() => {
+                setAddSubCategoryModalOpen(true);
+                // a function that adds a sub-category
+              }}
+            >
+              הוספת תת-קטגוריה
+              {/* <PlusOutlined /> */}
+            </button>
+          </div>
         </div>
+        <div className="filter-month">
+          <div className="input-group">
+            <select className="input" name="year">
+              <option defaultChecked value="">
+                בחר שנה
+              </option>
+            </select>
+            <label
+              className="label"
+              htmlFor="year"
+            >
+              שנה
+            </label>
+          </div>
+          <div className="input-group">
+            <select
+              className="input"
+              name="month"
+            >
+              <option defaultChecked value="">
+                בחר חודש
+              </option>
+            </select>
+            <label
+              className="label"
+              htmlFor="month"
+            >
+              חודש
+            </label>
+          </div>
+        </div>
+      </div>
+      <div className="table">
         <Table<DataType>
           loading={loading}
-          style={{ direction: "rtl" }}
+          style={{
+            direction: "rtl",
+            textAlign: "center",
+          }}
           bordered
           sticky
           pagination={{
-            position: ["bottomCenter"],
+            responsive: true,
+            position: ["topCenter"],
+            hideOnSinglePage: true,
+            style: { direction: "ltr" },
           }}
           footer={() => {
             return (
               <div>
                 <span color="blue">
                   סה"כ הוצאות:{" "}
-                  {spendings.reduce(
-                    (sum, spending) =>
-                      sum + Number(spending.sum),
-                    0
-                  )}
+                  {spendings
+                    .reduce(
+                      (sum, spending) =>
+                        sum +
+                        Number(spending.sum),
+                      0
+                    )
+                    .toFixed(2)}
                   ₪
                 </span>
               </div>
@@ -187,7 +247,59 @@ export function SpendingTable(): JSX.Element {
         footer={null}
         destroyOnClose
       >
-        <AddSpending ModalStatus={addModalOpen} />
+        <AddSpending
+          modalStateChanger={setAddModalOpen}
+          spendingStateChanger={(
+            spending: SpendingModel
+          ) => {
+            const newSpendings = spendings;
+            newSpendings.push(spending);
+            newSpendings.sort((a, b) => {
+              if (a.date < b.date) {
+                return -1;
+              } else if (a.date > b.date) {
+                return 1;
+              } else {
+                return 0;
+              }
+            });
+            setSpendings(newSpendings);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        onCancel={() => {
+          setAddCategoryModalOpen(false);
+        }}
+        title="הוספת קטגוריה"
+        open={addCategoryModalOpen}
+        centered
+        footer={null}
+        destroyOnClose
+      >
+        <AddCategory
+          modalStateChanger={
+            setAddCategoryModalOpen
+          }
+        />
+      </Modal>
+
+      <Modal
+        onCancel={() => {
+          setAddSubCategoryModalOpen(false);
+        }}
+        title="הוספת קטגוריה"
+        open={addSubCategoryModalOpen}
+        centered
+        footer={null}
+        destroyOnClose
+      >
+        <AddSubCategory
+          modalStateChanger={
+            setAddSubCategoryModalOpen
+          }
+        />
       </Modal>
     </div>
   );

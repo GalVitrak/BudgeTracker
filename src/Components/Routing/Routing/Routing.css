@@ -1,4 +1,7 @@
 .Routing {
   width: 100%;
   height: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

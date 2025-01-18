@@ -4,6 +4,7 @@ import { authStore } from "../Redux/AuthState";
 import notifyService from "./NotifyService";
 import SpendingModel from "../Models/SpendingModel";
 import dayjs from "dayjs";
+import CategoryModel from "../Models/CategoryModel";
 
 class SpendingsService {
   public async getSpendings(): Promise<
@@ -36,7 +37,7 @@ class SpendingsService {
               spending.subCategory,
               dayjs
                 .unix(spending.date._seconds)
-                .format("DD/MM/YYYY"),
+                .format("DD.MM.YYYY"),
               spending.sum,
               spending.note,
               spending.id
@@ -74,6 +75,49 @@ class SpendingsService {
       });
 
     return spending.id || "empty :(";
+  }
+
+  public async addCategory(
+    category: CategoryModel
+  ): Promise<string> {
+    const addCategory = httpsCallable(
+      functions,
+      "addCategory"
+    );
+
+    await addCategory(category)
+      .then(() => {
+        notifyService.success(
+          "קטגוריה נוספה בהצלחה"
+        );
+      })
+      .catch((error) => {
+        notifyService.error(error);
+        throw error;
+      });
+
+    return category.id || "empty :(";
+  }
+
+  public async addSubCategory(
+    category: CategoryModel
+  ): Promise<string> {
+    const addSubCategory = httpsCallable(
+      functions,
+      "addSubCategory"
+    );
+
+    await addSubCategory(category)
+      .then(() => {
+        notifyService.success(
+          "תת קטגוריה נוספה בהצלחה"
+        );
+      })
+      .catch((error) => {
+        notifyService.error(error);
+        throw error;
+      });
+    return "empty :(";
   }
 }
 

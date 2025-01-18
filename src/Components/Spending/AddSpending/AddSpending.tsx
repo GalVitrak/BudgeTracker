@@ -13,9 +13,11 @@ import {
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import { db } from "../../../../firebase-config";
 import { authStore } from "../../../Redux/AuthState";
+import notifyService from "../../../Services/NotifyService";
 
 interface addSpendingProps {
-  ModalStatus: boolean;
+  modalStateChanger: Function;
+  spendingStateChanger: Function;
 }
 
 export function AddSpending(
@@ -50,11 +52,36 @@ export function AddSpending(
   useEffect(() => {}, [selectedCategory]);
 
   async function send(spending: SpendingModel) {
-    const spendingID =
+    if (
+      spending.category === "" ||
+      spending.subCategory === ""
+    ) {
+      notifyService.info(
+        "בחר קטגוריה ותת קטגוריה"
+      );
+      return;
+    }
+    const year = selectedDate.split("-")[0];
+    const month = selectedDate.split("-")[1];
+    spending.year = year;
+    spending.month = month;
+    spending.id =
       await spendingsService.addSpending(
         spending
       );
-    console.log(spendingID);
+    const date = new Intl.DateTimeFormat(
+      "he-IL",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }
+    ).format(new Date(selectedDate));
+    spending.date = date;
+    console.log(spending);
+
+    props.spendingStateChanger(spending);
+    props.modalStateChanger(false);
   }
 
   return (
@@ -80,7 +107,12 @@ export function AddSpending(
                 <LoadingOutlined />
               </option>
             )}
-            <option key={"select"} value="">
+            <option
+              key={"select"}
+              value=""
+              disabled
+              selected
+            >
               בחר קטגוריה
             </option>
             <>
@@ -108,7 +140,12 @@ export function AddSpending(
             className="input"
             {...register("subCategory")}
           >
-            <option value="">
+            <option
+              key={"select"}
+              value=""
+              disabled
+              selected
+            >
               בחר תת-קטגוריה
             </option>
             <>
@@ -155,6 +192,8 @@ export function AddSpending(
             className="input"
             required
             type="number"
+            step={0.01}
+            min={1}
             {...register("sum")}
           />
           <label className="label" htmlFor="sum">
@@ -163,6 +202,7 @@ export function AddSpending(
         </div>
         <div className="input-group">
           <input
+            required
             className="input"
             type="text"
             {...register("note")}
