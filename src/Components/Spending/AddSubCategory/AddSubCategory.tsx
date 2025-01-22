@@ -7,7 +7,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../../../../firebase-config";
 import CategoryModel from "../../../Models/CategoryModel";
 import { useState, useEffect } from "react";
@@ -31,11 +31,19 @@ export function AddSubCategory(
     categoriesRef,
     where("uid", "in", ["allUsers", uid])
   );
-  const [categoriesData, loading] =
-    useCollectionData(q);
 
-  const categories =
-    categoriesData as CategoryModel[];
+  const [snapshot, loading] = useCollection(q);
+
+  const categories: CategoryModel[] = [];
+  snapshot?.docs.map((doc) => {
+    const category = new CategoryModel(
+      doc.data().uid,
+      doc.data().name,
+      doc.data().subCategories,
+      doc.id
+    );
+    categories.push(category);
+  });
 
   const { register, handleSubmit } =
     useForm<SubCategoryModel>();
@@ -52,9 +60,7 @@ export function AddSubCategory(
       notifyService.info("בחר קטגוריה");
       return;
     }
-    console.log(categories);
-    console.log(selectedCategory);
-    console.log(subCategory);
+
     if (uid) {
       const newSubCategory = new SubCategoryModel(
         subCategory.name,
@@ -64,6 +70,8 @@ export function AddSubCategory(
       selectedCategory?.subCategories.push(
         newSubCategory
       );
+
+      console.log(selectedCategory);
 
       if (selectedCategory) {
         await spendingsService.addSubCategory(

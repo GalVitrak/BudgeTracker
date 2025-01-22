@@ -1,27 +1,47 @@
 import "./SpendingTable.css";
 import { useEffect, useState } from "react";
-import { Modal, Space, Table, Tag } from "antd";
+import { Modal, Space, Table } from "antd";
 import type { TableProps } from "antd";
-import spendingsService from "../../../Services/SpendingsService";
 import SpendingModel from "../../../Models/SpendingModel";
-import notifyService from "../../../Services/NotifyService";
 import {
   DeleteOutlined,
   EditOutlined,
-  PlusOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
 import { AddSpending } from "../AddSpending/AddSpending";
-import { collection } from "firebase/firestore";
+import {
+  collection,
+  or,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../../../../firebase-config";
 import { AddCategory } from "../AddCategory/AddCategory";
-import CategoryModel from "../../../Models/CategoryModel";
 import { AddSubCategory } from "../AddSubCategory/AddSubCategory";
+import { authStore } from "../../../Redux/AuthState";
+import { useCollection } from "react-firebase-hooks/firestore";
+import dayjs from "dayjs";
+import {
+  SpendingActionType,
+  SpendingStore,
+} from "../../../Redux/SpendingState";
+import DatesModel from "../../../Models/DatesModel";
+import YearsModel from "../../../Models/YearsModel";
 
 export function SpendingTable(): JSX.Element {
-  const [loading, setLoading] = useState(false);
+  const [selectedDates, setSelectedDates] =
+    useState<boolean>(false);
+
+  const [dates, setDates] =
+    useState<DatesModel>();
+
   const [spendings, setSpendings] = useState<
     SpendingModel[]
   >([]);
+
+  const [year, setYear] = useState<YearsModel>();
+
   const [editModalOpen, setEditModalOpen] =
     useState(false);
   const [addModalOpen, setAddModalOpen] =
@@ -37,23 +57,84 @@ export function SpendingTable(): JSX.Element {
   const [spending, setSpending] =
     useState<SpendingModel>();
 
-  // const spendingRef = collection(db, "spendings");
+  const spendingRef = collection(db, "spendings");
+  const q = query(
+    spendingRef,
+    where(
+      "uid",
+      "==",
+      authStore.getState().user?.uid
+    )
+  );
+
+  const datesRef = collection(db, "dates");
+  const datesQuery = query(
+    datesRef,
+    where(
+      "uid",
+      "==",
+      authStore.getState().user?.uid
+    )
+  );
+
+  const [datesSnapshot, datesLoading] =
+    useCollection(datesQuery);
+
+  const [spendingSnapshot, loading] =
+    useCollection(q);
+
+  const extractedSpendings: SpendingModel[] = [];
 
   useEffect(() => {
-    setLoading(true);
-    spendingsService
-      .getSpendings()
-      .then((spendings) => {
-        setSpendings(spendings);
-        setLoading(false);
-        if (spendings.length === 0) {
-          notifyService.info("לא נמצאו הוצאות");
+    spendingSnapshot?.docs.map((doc) => {
+      const spending = new SpendingModel(
+        doc.data().uid,
+        doc.data().category,
+        doc.data().subCategory,
+        dayjs
+          .unix(doc.data().date.seconds)
+          .format("DD.MM.YYYY"),
+        doc.data().sum,
+        doc.data().note,
+        doc.id
+      );
+      extractedSpendings.push(spending);
+    });
+    SpendingStore.dispatch({
+      type: SpendingActionType.Set,
+      payload: extractedSpendings,
+    });
+
+    datesSnapshot?.docs.map((doc) => {
+      const date = new DatesModel(
+        doc.data().uid,
+        doc.data().years,
+        doc.id
+      );
+      setDates(date);
+      date.years.sort((a, b) => {
+        if (a.year > b.year) {
+          return -1;
+        } else if (a.year < b.year) {
+          return 1;
+        } else {
+          return 0;
         }
-      })
-      .catch((error) => {
-        notifyService.error(error);
       });
-  }, []);
+
+      date.years.forEach((year) => {
+        year.months.sort((a, b) => {
+          if (a.month > b.month) {
+            return -1;
+          } else if (a.month < b.month) {
+            return 1;
+          } else {
+            return 0;
+          }
+        });
+      });
+    });
+  }, [loading, datesLoading]);
 
   interface DataType {
     category: string;
@@ -106,6 +187,8 @@ export function SpendingTable(): JSX.Element {
             <DeleteOutlined
               style={{ cursor: "pointer" }}
               onClick={() => {
+                console.log(record);
+
                 // a function that deletes the spending and removes it from the current array
               }}
             />
@@ -169,10 +252,42 @@ export function SpendingTable(): JSX.Element {
         </div>
         <div className="filter-month">
           <div className="input-group">
-            <select className="input" name="year">
-              <option defaultChecked value="">
+            <select
+              className="input"
+              name="year"
+              onChange={(e) => {
+                let selectedYear: YearsModel;
+                dates?.years.forEach((year) => {
+                  if (
+                    year.year.toString() ===
+                    e.target.value
+                  ) {
+                    selectedYear = year;
+                  }
+                  setYear(selectedYear);
+                });
+              }}
+            >
+              <>
+                {datesLoading && (
+                  <option key={"loading"}>
+                    <LoadingOutlined />
+                  </option>
+                )}
+              </>
+              <option selected value="" disabled>
                 בחר שנה
               </option>
+              {dates?.years.map((year) => {
+                return (
+                  <option
+                    value={year.year}
+                    key={year.year}
+                  >
+                    {year.year}
+                  </option>
+                );
+              })}
             </select>
             <label
               className="label"
@@ -186,9 +301,24 @@ export function SpendingTable(): JSX.Element {
               className="input"
               name="month"
             >
-              <option defaultChecked value="">
+              <>
+                {datesLoading && (
+                  <option key={"loading"}>
+                    <LoadingOutlined />
+                  </option>
+                )}
+              </>
+              <option selected value="" disabled>
                 בחר חודש
               </option>
+              {year?.months.map((month) => (
+                <option
+                  value={month.month}
+                  key={month.month}
+                >
+                  {month.display}
+                </option>
+              ))}
             </select>
             <label
               className="label"
@@ -200,42 +330,48 @@ export function SpendingTable(): JSX.Element {
         </div>
       </div>
       <div className="table">
-        <Table<DataType>
-          loading={loading}
-          style={{
-            direction: "rtl",
-            textAlign: "center",
-          }}
-          bordered
-          sticky
-          pagination={{
-            responsive: true,
-            position: ["topCenter"],
-            hideOnSinglePage: true,
-            style: { direction: "ltr" },
-          }}
-          footer={() => {
-            return (
-              <div>
-                <span color="blue">
-                  סה"כ הוצאות:{" "}
-                  {spendings
-                    .reduce(
-                      (sum, spending) =>
-                        sum +
-                        Number(spending.sum),
-                      0
-                    )
-                    .toFixed(2)}
-                  ₪
-                </span>
-              </div>
-            );
-          }}
-          scroll={{ x: 1300 }}
-          columns={columns}
-          dataSource={spendings}
-        />
+        <>
+          {selectedDates ? (
+            <Table<DataType>
+              loading={loading}
+              style={{
+                direction: "rtl",
+                textAlign: "center",
+              }}
+              bordered
+              sticky
+              pagination={{
+                responsive: true,
+                position: ["topCenter"],
+                hideOnSinglePage: true,
+                style: { direction: "ltr" },
+              }}
+              footer={() => {
+                return (
+                  <div>
+                    <span color="blue">
+                      סה"כ הוצאות:{" "}
+                      {spendings
+                        .reduce(
+                          (sum, spending) =>
+                            sum +
+                            Number(spending.sum),
+                          0
+                        )
+                        .toFixed(2)}
+                      ₪
+                    </span>
+                  </div>
+                );
+              }}
+              scroll={{ x: 1300 }}
+              columns={columns}
+              dataSource={spendings}
+            />
+          ) : (
+            <h1>אנא בחר תאריכים</h1>
+          )}
+        </>
       </div>
       <Modal
         onCancel={() => {
@@ -252,6 +388,8 @@ export function SpendingTable(): JSX.Element {
           spendingStateChanger={(
             spending: SpendingModel
           ) => {
+            console.log(spending);
+
             const newSpendings = spendings;
             newSpendings.push(spending);
             newSpendings.sort((a, b) => {

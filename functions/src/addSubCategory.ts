@@ -3,17 +3,12 @@ import { db } from ".";
 
 const addSubCategory = functions.https.onCall(
   async (data, context) => {
-    const name = data.name;
     const subCategories = data.subCategories;
-    console.log(
-      "🚀 ~ subCategories:",
-      subCategories
-    );
-    console.log("🚀 ~ name:", name);
+    const id = data.id;
 
     await db
       .collection("categories")
-      .where("name", "==", name)
+      .where("id", "==", id)
       .get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {

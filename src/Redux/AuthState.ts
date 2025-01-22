@@ -49,7 +49,6 @@ export class AuthState {
 export enum AuthActionType {
   Register = "register",
   Login = "login",
-  LoginRemember = "login-remember",
   Logout = "logout",
 }
 
@@ -72,21 +71,6 @@ export function authReducer(
       break;
 
     case AuthActionType.Login:
-      newState.token = action.payload.token;
-      if (newState.token) {
-        container = jwtDecode(newState.token);
-        newState.user = container.user;
-        localStorage.setItem(
-          "SpendingCheckToken",
-          newState.token
-        );
-      }
-      notifyService.success(
-        "REDUX Logged in successfully"
-      );
-      break;
-
-    case AuthActionType.LoginRemember:
       newState.token = action.payload.token;
       if (newState.token) {
         container = jwtDecode(newState.token);

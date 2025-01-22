@@ -22,8 +22,8 @@ class SpendingModel {
     this.category = category;
     this.subCategory = subCategory;
     this.date = date;
-    this.year = date.split("/")[2];
-    this.month = date.split("/")[1];
+    this.year = date.split(".")[2];
+    this.month = date.split(".")[1];
     this.sum = sum;
     this.note = note;
     this.id = id;
