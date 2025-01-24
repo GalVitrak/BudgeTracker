@@ -89,6 +89,7 @@ export function AddSpending(
       <form onSubmit={handleSubmit(send)}>
         <div className="input-group">
           <select
+            defaultValue={"value"}
             className="input"
             {...register("category", {
               onChange: (e) => {
@@ -109,24 +110,22 @@ export function AddSpending(
             )}
             <option
               key={"select"}
-              value=""
+              value="value"
               disabled
-              selected
             >
               בחר קטגוריה
             </option>
-            <>
-              {categories?.map((category) => {
-                return (
-                  <option
-                    value={category.name}
-                    key={category.id}
-                  >
-                    {category.name}
-                  </option>
-                );
-              })}
-            </>
+
+            {categories?.map((category) => {
+              return (
+                <option
+                  key={category.id}
+                  value={category.name}
+                >
+                  {category.name}
+                </option>
+              );
+            })}
           </select>
           <label
             className="label"
@@ -137,31 +136,30 @@ export function AddSpending(
         </div>
         <div className="input-group">
           <select
+            defaultValue={"value"}
             className="input"
             {...register("subCategory")}
           >
             <option
               key={"select"}
-              value=""
+              value="value"
               disabled
-              selected
             >
               בחר תת-קטגוריה
             </option>
-            <>
-              {selectedCategory?.subCategories?.map(
-                (subCategory) => {
-                  return (
-                    <option
-                      value={subCategory.name}
-                      key={subCategory.name}
-                    >
-                      {subCategory.name}
-                    </option>
-                  );
-                }
-              )}
-            </>
+
+            {selectedCategory?.subCategories?.map(
+              (subCategory) => {
+                return (
+                  <option
+                    key={subCategory.name}
+                    value={subCategory.name}
+                  >
+                    {subCategory.name}
+                  </option>
+                );
+              }
+            )}
           </select>
           <label
             className="label"

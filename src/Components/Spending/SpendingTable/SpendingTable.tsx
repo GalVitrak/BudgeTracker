@@ -11,8 +11,6 @@ import {
 import { AddSpending } from "../AddSpending/AddSpending";
 import {
   collection,
-  or,
-  orderBy,
   query,
   where,
 } from "firebase/firestore";
@@ -22,25 +20,24 @@ import { AddSubCategory } from "../AddSubCategory/AddSubCategory";
 import { authStore } from "../../../Redux/AuthState";
 import { useCollection } from "react-firebase-hooks/firestore";
 import dayjs from "dayjs";
-import {
-  SpendingActionType,
-  SpendingStore,
-} from "../../../Redux/SpendingState";
 import DatesModel from "../../../Models/DatesModel";
 import YearsModel from "../../../Models/YearsModel";
 
 export function SpendingTable(): JSX.Element {
-  const [selectedDates, setSelectedDates] =
-    useState<boolean>(false);
-
   const [dates, setDates] =
     useState<DatesModel>();
+
+  const [datesYear, setDatesYear] =
+    useState<YearsModel>();
+
+  const [selectedMonth, setSelectedMonth] =
+    useState<string>("");
+  const [selectedYear, setSelectedYear] =
+    useState<string>("");
 
   const [spendings, setSpendings] = useState<
     SpendingModel[]
   >([]);
-
-  const [year, setYear] = useState<YearsModel>();
 
   const [editModalOpen, setEditModalOpen] =
     useState(false);
@@ -58,13 +55,16 @@ export function SpendingTable(): JSX.Element {
     useState<SpendingModel>();
 
   const spendingRef = collection(db, "spendings");
-  const q = query(
+
+  const spendingQuery = query(
     spendingRef,
     where(
       "uid",
       "==",
       authStore.getState().user?.uid
-    )
+    ),
+    where("year", "==", +selectedYear),
+    where("month", "==", +selectedMonth)
   );
 
   const datesRef = collection(db, "dates");
@@ -81,30 +81,32 @@ export function SpendingTable(): JSX.Element {
     useCollection(datesQuery);
 
   const [spendingSnapshot, loading] =
-    useCollection(q);
+    useCollection(spendingQuery);
 
-  const extractedSpendings: SpendingModel[] = [];
+  let extractedSpendings: SpendingModel[] = [];
 
   useEffect(() => {
-    spendingSnapshot?.docs.map((doc) => {
-      const spending = new SpendingModel(
-        doc.data().uid,
-        doc.data().category,
-        doc.data().subCategory,
-        dayjs
-          .unix(doc.data().date.seconds)
-          .format("DD.MM.YYYY"),
-        doc.data().sum,
-        doc.data().note,
-        doc.id
-      );
-      extractedSpendings.push(spending);
-    });
-    SpendingStore.dispatch({
-      type: SpendingActionType.Set,
-      payload: extractedSpendings,
-    });
+    extractedSpendings = [];
+    if (extractedSpendings.length === 0) {
+      spendingSnapshot?.docs.map((doc) => {
+        const spending = new SpendingModel(
+          doc.data().uid,
+          doc.data().category,
+          doc.data().subCategory,
+          dayjs
+            .unix(doc.data().date.seconds)
+            .format("DD.MM.YYYY"),
+          doc.data().sum,
+          doc.data().note,
+          doc.id
+        );
+        extractedSpendings.push(spending);
+      });
+      setSpendings(extractedSpendings);
+    }
+  }, [loading, selectedMonth, selectedYear]);
 
+  useEffect(() => {
     datesSnapshot?.docs.map((doc) => {
       const date = new DatesModel(
         doc.data().uid,
@@ -134,9 +136,10 @@ export function SpendingTable(): JSX.Element {
         });
       });
     });
-  }, [loading, datesLoading]);
+  }, [datesLoading]);
 
   interface DataType {
+    id: string;
     category: string;
     subCategory: string;
     date: string;
@@ -253,6 +256,7 @@ export function SpendingTable(): JSX.Element {
         <div className="filter-month">
           <div className="input-group">
             <select
+              defaultValue={""}
               className="input"
               name="year"
               onChange={(e) => {
@@ -264,18 +268,23 @@ export function SpendingTable(): JSX.Element {
                   ) {
                     selectedYear = year;
                   }
-                  setYear(selectedYear);
+                  setDatesYear(selectedYear);
                 });
+                setSelectedYear(e.target.value);
+                setSelectedMonth("");
               }}
             >
               <>
                 {datesLoading && (
-                  <option key={"loading"}>
+                  <option
+                    key={"loading"}
+                    value={"loading"}
+                  >
                     <LoadingOutlined />
                   </option>
                 )}
               </>
-              <option selected value="" disabled>
+              <option value="" disabled>
                 בחר שנה
               </option>
               {dates?.years.map((year) => {
@@ -298,20 +307,25 @@ export function SpendingTable(): JSX.Element {
           </div>
           <div className="input-group">
             <select
+              defaultValue={""}
               className="input"
               name="month"
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+              }}
             >
               <>
                 {datesLoading && (
-                  <option key={"loading"}>
+                  <option
+                    key={"loading"}
+                    value={"loading"}
+                  >
                     <LoadingOutlined />
                   </option>
                 )}
               </>
-              <option selected value="" disabled>
-                בחר חודש
-              </option>
-              {year?.months.map((month) => (
+              <option value="">בחר חודש</option>
+              {datesYear?.months.map((month) => (
                 <option
                   value={month.month}
                   key={month.month}
@@ -331,7 +345,8 @@ export function SpendingTable(): JSX.Element {
       </div>
       <div className="table">
         <>
-          {selectedDates ? (
+          {selectedMonth !== "" &&
+          selectedYear !== "" ? (
             <Table<DataType>
               loading={loading}
               style={{
@@ -349,27 +364,32 @@ export function SpendingTable(): JSX.Element {
               footer={() => {
                 return (
                   <div>
-                    <span color="blue">
-                      סה"כ הוצאות:{" "}
-                      {spendings
-                        .reduce(
-                          (sum, spending) =>
-                            sum +
-                            Number(spending.sum),
-                          0
-                        )
-                        .toFixed(2)}
-                      ₪
-                    </span>
+                    סה"כ הוצאות:{" "}
+                    {spendings
+                      .reduce(
+                        (sum, spending) =>
+                          sum +
+                          Number(spending.sum),
+                        0
+                      )
+                      .toFixed(2)}
+                    ₪
                   </div>
                 );
               }}
               scroll={{ x: 1300 }}
               columns={columns}
               dataSource={spendings}
+              rowKey={(record) => record.id}
             />
           ) : (
-            <h1>אנא בחר תאריכים</h1>
+            <div className="empty-table">
+              {selectedYear === "" ? (
+                <h1>אנא בחר שנה</h1>
+              ) : (
+                <h1>אנא בחר חודש</h1>
+              )}
+            </div>
           )}
         </>
       </div>
@@ -388,20 +408,23 @@ export function SpendingTable(): JSX.Element {
           spendingStateChanger={(
             spending: SpendingModel
           ) => {
-            console.log(spending);
-
-            const newSpendings = spendings;
-            newSpendings.push(spending);
-            newSpendings.sort((a, b) => {
-              if (a.date < b.date) {
-                return -1;
-              } else if (a.date > b.date) {
-                return 1;
-              } else {
-                return 0;
-              }
-            });
-            setSpendings(newSpendings);
+            if (
+              spending.month === selectedMonth ||
+              spending.year === selectedYear
+            ) {
+              const newSpendings = spendings;
+              newSpendings.push(spending);
+              newSpendings.sort((a, b) => {
+                if (a.date < b.date) {
+                  return -1;
+                } else if (a.date > b.date) {
+                  return 1;
+                } else {
+                  return 0;
+                }
+              });
+              setSpendings(newSpendings);
+            }
           }}
         />
       </Modal>
