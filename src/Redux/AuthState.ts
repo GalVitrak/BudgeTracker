@@ -22,7 +22,10 @@ export class AuthState {
       }
       return true;
     } catch (e) {
-      notifyService.error(e);
+      notifyService.error({
+        message: "שגיאה באימות הטוקן",
+        details: e,
+      });
       return null;
     }
   };
@@ -80,9 +83,6 @@ export function authReducer(
           newState.token
         );
       }
-      notifyService.success(
-        "REDUX Logged in successfully"
-      );
       break;
 
     case AuthActionType.Logout:

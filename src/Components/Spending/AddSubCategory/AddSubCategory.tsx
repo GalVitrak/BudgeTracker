@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import "./AddSubCategory.css";
+import "../../../Styles/SharedModals.css";
 import SubCategoryModel from "../../../Models/SubCategoryModel";
 import { authStore } from "../../../Redux/AuthState";
 import {
@@ -22,6 +22,13 @@ interface addSubCategoryProps {
 export function AddSubCategory(
   props: addSubCategoryProps
 ): JSX.Element {
+  const { register, handleSubmit } =
+    useForm<SubCategoryModel>();
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryModel>();
+
   const uid = authStore.getState().user?.uid;
   const categoriesRef = collection(
     db,
@@ -31,63 +38,79 @@ export function AddSubCategory(
     categoriesRef,
     where("uid", "in", ["allUsers", uid])
   );
-
   const [snapshot, loading] = useCollection(q);
 
-  const categories: CategoryModel[] = [];
-  snapshot?.docs.map((doc) => {
-    const category = new CategoryModel(
-      doc.data().uid,
-      doc.data().name,
-      doc.data().subCategories,
-      doc.id
-    );
-    categories.push(category);
-  });
-
-  const { register, handleSubmit } =
-    useForm<SubCategoryModel>();
-
-  const [selectedCategory, setSelectedCategory] =
-    useState<CategoryModel>();
-
-  useEffect(() => {}, [selectedCategory]);
+  const categories: CategoryModel[] =
+    snapshot?.docs.map(
+      (doc) =>
+        new CategoryModel(
+          doc.data().uid,
+          doc.data().name,
+          doc.data().subCategories,
+          doc.id
+        )
+    ) || [];
 
   async function send(
     subCategory: SubCategoryModel
   ) {
-    if (!selectedCategory) {
-      notifyService.info("בחר קטגוריה");
-      return;
-    }
+    if (isSubmitting) return;
 
-    if (uid) {
+    try {
+      setIsSubmitting(true);
+
+      if (!selectedCategory) {
+        notifyService.info("בחר קטגוריה");
+        return;
+      }
+
+      if (!uid) {
+        notifyService.error({
+          message: "משתמש לא מחובר",
+        });
+        return;
+      }
+
       const newSubCategory = new SubCategoryModel(
         subCategory.name,
         uid
       );
-      console.log(newSubCategory);
-      selectedCategory?.subCategories.push(
+      selectedCategory.subCategories.push(
         newSubCategory
       );
+      await spendingsService.addSubCategory(
+        selectedCategory
+      );
 
-      console.log(selectedCategory);
-
-      if (selectedCategory) {
-        await spendingsService.addSubCategory(
-          selectedCategory
-        );
-      }
       props.modalStateChanger(false);
+      notifyService.success(
+        "תת-הקטגוריה נוספה בהצלחה"
+      );
+    } catch (error) {
+      console.error(
+        "Error adding sub-category:",
+        error
+      );
+      notifyService.error({
+        message: "שגיאה בהוספת תת-הקטגוריה",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
     <div className="AddSubCategory">
-      <form onSubmit={handleSubmit(send)}>
+      <form
+        onSubmit={handleSubmit(send)}
+        className="modal-form"
+      >
         <div className="input-group">
           <select
+            defaultValue={"value"}
             className="input"
+            name="category"
+            required
             onChange={(e) => {
               const category = categories.find(
                 (category) =>
@@ -96,31 +119,23 @@ export function AddSubCategory(
               setSelectedCategory(category);
             }}
           >
-            {loading && (
-              <option key={"loading"}>
-                <LoadingOutlined />
-              </option>
-            )}
-            <option
-              key={"select"}
-              value=""
-              disabled
-              selected
-            >
+            <option value="value" disabled>
               בחר קטגוריה
             </option>
-            <>
-              {categories?.map((category) => {
-                return (
-                  <option
-                    value={category.name}
-                    key={category.id}
-                  >
-                    {category.name}
-                  </option>
-                );
-              })}
-            </>
+            {loading ? (
+              <option disabled>
+                <LoadingOutlined /> טוען...
+              </option>
+            ) : (
+              categories.map((category) => (
+                <option
+                  key={category.id}
+                  value={category.name}
+                >
+                  {category.name}
+                </option>
+              ))
+            )}
           </select>
           <label
             className="label"
@@ -129,22 +144,28 @@ export function AddSubCategory(
             קטגוריה
           </label>
         </div>
+
         <div className="input-group">
           <input
             className="input"
-            autoFocus
             required
             type="text"
-            {...register("name", {
-              required: true,
-            })}
+            {...register("name")}
           />
-          <label className="label" htmlFor="name">
-            שם תת קטגוריה
+          <label className="label">
+            שם תת-הקטגוריה
           </label>
         </div>
+
         <div className="input-group">
-          <button className="input">הוסף</button>
+          <button
+            className="modern-button"
+            disabled={
+              isSubmitting || !selectedCategory
+            }
+          >
+            {isSubmitting ? "מוסיף..." : "הוסף"}
+          </button>
         </div>
       </form>
     </div>

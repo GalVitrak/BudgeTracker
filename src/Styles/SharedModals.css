@@ -1,0 +1,159 @@
+/* Modal Styles */
+.ant-modal {
+  direction: rtl;
+  width: auto !important;
+  min-width: 300px;
+  max-width: 90vw;
+}
+
+.ant-modal-content {
+  padding: 32px 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.ant-modal-header {
+  margin-bottom: 24px;
+  padding: 0;
+  border: none;
+  position: relative;
+  padding-left: 28px; /* מרווח עבור כפתור הסגירה */
+}
+
+.ant-modal-title {
+  font-size: 20px;
+  color: #333;
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+}
+
+.ant-modal-close {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ant-modal-body {
+  padding: 0;
+}
+
+/* Form Styles */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 320px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modern-button {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #6b8cce;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modern-button:hover {
+  background: #5a7ab8;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(107, 140, 206, 0.2);
+}
+.modern-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Submit Button Styles */
+.input[type="submit"],
+button.input,
+.modern-button[type="submit"] {
+  background: #1890ff;
+  color: white;
+  font-weight: 500;
+  padding: 12px 24px;
+  border: none;
+  margin-top: 8px;
+}
+
+.input[type="submit"]:hover:not(:disabled),
+button.input:hover:not(:disabled),
+.modern-button[type="submit"]:hover:not(
+    :disabled
+  ) {
+  background: #40a9ff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+.input[type="submit"]:disabled,
+button.input:disabled,
+.modern-button[type="submit"]:disabled {
+  background: #d9d9d9;
+  color: rgba(0, 0, 0, 0.25);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .ant-modal {
+    margin: 16px !important;
+    width: calc(100% - 32px) !important;
+    max-width: 100%;
+    top: 0;
+  }
+
+  .ant-modal-content {
+    padding: 24px;
+    min-height: auto;
+    max-height: calc(100vh - 32px);
+    border-radius: 12px;
+    overflow-y: auto;
+  }
+
+  .ant-modal-header {
+    margin-bottom: 16px;
+  }
+
+  .ant-modal-title {
+    font-size: 18px;
+  }
+
+  .modal-form {
+    gap: 16px;
+    min-width: unset;
+    width: 100%;
+  }
+}
+
+/* התאמות נוספות למסכים קטנים מאוד */
+@media (max-width: 380px) {
+  .ant-modal {
+    margin: 8px !important;
+    width: calc(100% - 16px) !important;
+  }
+
+  .ant-modal-content {
+    padding: 16px;
+  }
+}

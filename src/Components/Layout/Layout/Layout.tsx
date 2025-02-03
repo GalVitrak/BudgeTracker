@@ -1,4 +1,5 @@
 import Routing from "../../Routing/Routing/Routing";
+import { Footer } from "../Footer/Footer";
 import Header from "../Header/Header";
 import "./Layout.css";
 
@@ -11,7 +12,7 @@ function Layout(): JSX.Element {
       <main>
         <Routing />
       </main>
-      <footer>footer</footer>
+      <footer><Footer/></footer>
     </div>
   );
 }

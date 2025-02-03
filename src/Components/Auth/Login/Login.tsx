@@ -6,81 +6,101 @@ import { Modal } from "antd";
 import Register from "../Register/Register";
 import authService from "../../../Services/AuthService";
 import { useNavigate } from "react-router-dom";
+import notifyService from "../../../Services/NotifyService";
 
 function Login(): JSX.Element {
   const navigate = useNavigate();
-
   const [isModalOpen, setIsModalOpen] =
     useState(false);
-
+  const [isLoading, setIsLoading] =
+    useState(false);
   const { register, handleSubmit } =
     useForm<CredentialsModel>();
 
   async function send(
     credentials: CredentialsModel
   ) {
-    const proceed = await authService.login(
-      credentials
-    );
-    if (proceed) {
-      navigate("/home");
+    if (isLoading) return;
+
+    try {
+      setIsLoading(true);
+      await authService
+        .login(credentials)
+        .then(() => {
+          navigate("/dashboard");
+        })
+        .catch((error) => {
+          notifyService.error(error);
+          throw new Error(error);
+        });
+    } finally {
+      setIsLoading(false);
     }
   }
+
   return (
     <div className="Login">
-      <form onSubmit={handleSubmit(send)}>
-        <div className="input-group">
-          <input
-            className="input"
-            required
-            autoComplete="off"
-            type="text"
-            {...register("email")}
-          />
-          <label
-            className="label"
-            htmlFor="email"
-          >
-            דוא"ל
-          </label>
+      <div className="login-container">
+        <div className="login-form-section">
+          <form onSubmit={handleSubmit(send)}>
+            <div className="input-group">
+              <input
+                className="input"
+                required
+                autoComplete="off"
+                type="text"
+                {...register("email")}
+              />
+              <label className="label">
+                דוא"ל
+              </label>
+            </div>
+
+            <div className="input-group">
+              <input
+                className="input"
+                required
+                type="password"
+                {...register("password")}
+              />
+              <label className="label">
+                סיסמה
+              </label>
+            </div>
+
+            <div className="input-group">
+              <button
+                className="modern-button"
+                disabled={isLoading}
+              >
+                {isLoading ? "מתחבר..." : "התחבר"}
+              </button>
+            </div>
+
+            <h4
+              className="regInit"
+              onClick={() => setIsModalOpen(true)}
+            >
+              עדיין לא רשום? לחץ כאן
+            </h4>
+          </form>
         </div>
 
-        <div className="input-group">
-          <input
-            className="input"
-            required
-            type="password"
-            {...register("password")}
-          />
-          <label
-            className="label"
-            htmlFor="password"
-          >
-            סיסמה
-          </label>
+        <div className="login-image-section">
+          <div className="login-image-content">
+            <h2>ברוכים הבאים</h2>
+            <p>התחבר כדי לנהל את ההוצאות שלך</p>
+          </div>
         </div>
-        <div className="input-group">
-          <button className="input">התחבר</button>
-        </div>
-        <h4
-          className="regInit"
-          onClick={() => {
-            setIsModalOpen(true);
-          }}
-        >
-          עדיין לא רשום? לחץ כאן
-        </h4>
-      </form>
+      </div>
+
       <Modal
         destroyOnClose
         footer={null}
         centered
         title=""
         open={isModalOpen}
-        // onOk={handleOk}
-        onCancel={()=>{
-          setIsModalOpen(false)
-        }}
+        onCancel={() => setIsModalOpen(false)}
       >
         <Register />
       </Modal>

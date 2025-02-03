@@ -2,7 +2,6 @@ class UserModel {
   public id?: string;
   public uid: string;
   public email: string;
-  public nickname: string;
   public password: string;
   public approved: boolean;
   public averageEarning?: number;
@@ -12,14 +11,12 @@ class UserModel {
   public constructor(
     uid: string,
     email: string,
-    nickname: string,
     password: string,
     id?: string,
     role?: string
   ) {
     this.uid = uid;
     this.email = email;
-    this.nickname = nickname;
     this.password = password;
     this.approved = false;
     this.id = id;

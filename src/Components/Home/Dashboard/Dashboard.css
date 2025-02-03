@@ -1,0 +1,189 @@
+.Dashboard {
+  padding: 14px;
+  padding-top: 45px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 1.3rem;
+  padding: 14px 7px;
+  max-width: 1020px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-header h1 {
+  font-size: clamp(1.06rem, 4vw, 1.7rem);
+  margin-bottom: 0.43rem;
+  margin-top: 0;
+}
+
+.dashboard-header p {
+  font-size: clamp(0.74rem, 3vw, 0.94rem);
+  color: #666;
+  margin: 0;
+}
+
+.stats-container {
+  margin-bottom: 1.3rem;
+  max-width: 1020px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 72%;
+}
+
+.stat-card {
+  height: 100%;
+  text-align: center;
+  min-height: 102px;
+}
+
+.stat-card .anticon {
+  font-size: 1.2em;
+  margin-right: 4px;
+}
+
+.total-icon {
+  color: #8b4513;
+}
+
+.highest-icon {
+  color: #ff4d4f;
+}
+
+.lowest-icon {
+  color: #52c41a;
+}
+
+.quick-actions {
+  max-width: 1020px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 72%;
+}
+
+.section-title {
+  text-align: center;
+  margin: 1.3rem 0;
+  font-size: clamp(1.02rem, 4vw, 1.28rem);
+}
+
+.action-card {
+  height: 100%;
+  text-align: center;
+  padding: 10px;
+}
+
+.action-card h3 {
+  font-size: clamp(0.85rem, 3vw, 1.02rem);
+}
+
+.action-card p {
+  margin: 7px 0;
+}
+
+.recent-activity {
+  max-width: 1020px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 72%;
+}
+
+.activity-card {
+  max-width: 680px;
+  margin: 0 auto;
+  height: 100%;
+}
+
+.activity-card .ant-card-body {
+  height: 100%;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  flex: 1;
+}
+
+.activity-item.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 120px;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.activity-icon {
+  font-size: 1.2rem;
+  margin-inline-end: 12px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.activity-details {
+  flex: 1;
+  margin-inline-end: 12px;
+}
+
+.activity-details h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.activity-details p {
+  margin: 3px 0;
+}
+
+.activity-note {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.activity-sum {
+  margin: 0;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.activity-date {
+  font-size: 0.8rem;
+  color: #999;
+  min-width: 60px;
+  text-align: left;
+}
+
+.empty-state {
+  color: #666;
+  text-align: center;
+  padding: 20px;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+.action-card .ant-card-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}

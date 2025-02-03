@@ -1,0 +1,104 @@
+.NotFound {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.not-found-content {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 90%;
+}
+
+.error-code {
+  font-size: 120px;
+  margin: 0;
+  background: linear-gradient(
+    45deg,
+    #6b8cce,
+    #ff6b6b
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulse 2s infinite;
+}
+
+.emoji-container {
+  margin: 20px 0;
+}
+
+.emoji {
+  font-size: 60px;
+  animation: bounce 2s infinite;
+  display: inline-block;
+}
+
+.error-message {
+  color: #2c3e50;
+  font-size: 28px;
+  margin: 20px 0;
+}
+
+.error-description {
+  color: #666;
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.home-button {
+  font-size: 18px;
+  padding: 12px 30px;
+  transition: transform 0.3s ease;
+}
+
+.home-button:hover {
+  transform: scale(1.05);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@media (max-width: 480px) {
+  .error-code {
+    font-size: 80px;
+  }
+
+  .emoji {
+    font-size: 40px;
+  }
+
+  .error-message {
+    font-size: 24px;
+  }
+
+  .error-description {
+    font-size: 16px;
+  }
+}

@@ -1,31 +1,39 @@
-import Login from "../../Auth/Login/Login";
-import Register from "../../Auth/Register/Register";
+import { Routes, Route } from "react-router-dom";
 import Home from "../../Home/Home/Home";
-import { SpendingTable } from "../../Spending/SpendingTable/SpendingTable";
+import Login from "../../Auth/Login/Login";
+import Dashboard from "../../Home/Dashboard/Dashboard";
+import { BudgetPage } from "../../Home/BudgetPage/BudgetPage";
+import ProtectedRoute from "../../Auth/ProtectedRoute";
+import NotFound from "../../Layout/NotFound/NotFound";
 import "./Routing.css";
-import {
-  Navigate,
-  Route,
-  Routes,
-} from "react-router-dom";
 
 function Routing(): JSX.Element {
   return (
     <div className="Routing">
       <Routes>
         <Route path="/home" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route
           path="/login"
           element={<Login />}
         />
         <Route
-          path="/spending-table"
-          element={<SpendingTable />}
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
         <Route
-          path="/"
-          element={<Navigate to="/home" />}
+          path="/budget"
+          element={
+            <ProtectedRoute>
+              <BudgetPage />
+            </ProtectedRoute>
+          }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );

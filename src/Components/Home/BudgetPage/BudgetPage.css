@@ -1,0 +1,156 @@
+.BudgetPage {
+	width: 95%;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 24px;
+	min-height: calc(100vh - 60px);
+}
+
+.filters-section {
+	margin-bottom: 32px;
+	background: white;
+	padding: 24px;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.filter-group {
+	display: flex;
+	gap: 24px;
+	flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.filter-month {
+  display: flex;
+  gap: 24px;
+  flex-direction: row-reverse;
+}
+
+.input-group {
+	flex: 1;
+	min-width: 200px;
+  text-align: right;
+}
+
+.modern-select {
+	width: 100%;
+	padding: 10px 16px;
+	border-radius: 8px;
+	border: 1px solid #e8e8e8;
+	background: white;
+	font-size: 14px;
+	transition: all 0.3s;
+}
+
+.modern-select:hover {
+	border-color: #40a9ff;
+}
+
+.modern-select:focus {
+	outline: none;
+	border-color: #1890ff;
+	box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.modern-select:disabled {
+	background: #f5f5f5;
+	cursor: not-allowed;
+}
+
+.label {
+	display: block;
+	margin-bottom: 8px;
+	color: #666;
+	font-size: 14px;
+  text-align: right;
+}
+
+select.input {
+  text-align: right;
+  direction: rtl;
+}
+
+.chart-container {
+	background: white;
+	padding: 24px;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+	margin-top: 24px;
+}
+
+.chart-title {
+	text-align: center;
+	margin-bottom: 24px;
+	color: #333;
+	font-size: 20px;
+}
+
+.chart-wrapper {
+	height: 400px;
+	margin: 0 auto;
+}
+
+.total-amount {
+	text-align: center;
+	margin-top: 24px;
+	font-size: 18px;
+	font-weight: 500;
+	color: #1890ff;
+}
+
+.empty-state {
+	text-align: center;
+	padding: 48px;
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.empty-state h2 {
+	color: #666;
+	font-size: 20px;
+	margin: 0;
+}
+
+.loading-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 400px;
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* התאמה למובייל */
+@media (max-width: 768px) {
+	.BudgetPage {
+		width: 100%;
+		padding: 16px;
+	}
+
+	.filters-section {
+		padding: 16px;
+	}
+
+	.filter-group {
+		gap: 16px;
+	}
+
+	.chart-container {
+		padding: 16px;
+	}
+
+	.chart-wrapper {
+		height: 300px;
+	}
+
+	.chart-title {
+		font-size: 18px;
+	}
+
+	.total-amount {
+		font-size: 16px;
+	}
+}

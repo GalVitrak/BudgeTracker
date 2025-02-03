@@ -1,5 +1,8 @@
 import { useForm } from "react-hook-form";
-import "./AddSpending.css";
+import "../../../Styles/SharedModals.css";
+// import "./AddSpending.css";
+import "../../../Styles/SharedModals.css";
+
 import SpendingModel from "../../../Models/SpendingModel";
 import CategoryModel from "../../../Models/CategoryModel";
 import { useEffect, useState } from "react";
@@ -49,44 +52,67 @@ export function AddSpending(
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryModel>();
 
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
   useEffect(() => {}, [selectedCategory]);
 
   async function send(spending: SpendingModel) {
-    if (
-      spending.category === "" ||
-      spending.subCategory === ""
-    ) {
-      notifyService.info(
-        "בחר קטגוריה ותת קטגוריה"
-      );
-      return;
-    }
-    const year = selectedDate.split("-")[0];
-    const month = selectedDate.split("-")[1];
-    spending.year = year;
-    spending.month = month;
-    spending.id =
-      await spendingsService.addSpending(
-        spending
-      );
-    const date = new Intl.DateTimeFormat(
-      "he-IL",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }
-    ).format(new Date(selectedDate));
-    spending.date = date;
-    console.log(spending);
+    if (isSubmitting) return;
 
-    props.spendingStateChanger(spending);
-    props.modalStateChanger(false);
+    try {
+      setIsSubmitting(true);
+
+      if (
+        spending.category === "" ||
+        spending.subCategory === ""
+      ) {
+        notifyService.info(
+          "בחר קטגוריה ותת קטגוריה"
+        );
+        return;
+      }
+
+      const year = selectedDate.split("-")[0];
+      const month = selectedDate.split("-")[1];
+      spending.year = year;
+      spending.month = month;
+      spending.id =
+        await spendingsService.addSpending(
+          spending
+        );
+      const date = new Intl.DateTimeFormat(
+        "he-IL",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }
+      ).format(new Date(selectedDate));
+      spending.date = date;
+      console.log(spending);
+
+      props.spendingStateChanger(spending);
+      props.modalStateChanger(false);
+    } catch (error) {
+      console.error(
+        "Error adding spending:",
+        error
+      );
+      notifyService.error({
+        message: "שגיאה בהוספת ההוצאה",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div className="AddSpending">
-      <form onSubmit={handleSubmit(send)}>
+      <form
+        onSubmit={handleSubmit(send)}
+        className="modal-form"
+      >
         <div className="input-group">
           <select
             defaultValue={"value"}
@@ -210,7 +236,12 @@ export function AddSpending(
           </label>
         </div>
         <div className="input-group">
-          <button className="input">הוסף</button>
+          <button
+            className="modern-button"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "מוסיף..." : "הוסף"}
+          </button>
         </div>{" "}
       </form>
     </div>

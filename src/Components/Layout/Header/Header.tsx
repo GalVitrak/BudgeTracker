@@ -22,49 +22,86 @@ function Header(): JSX.Element {
   type MenuItem =
     Required<MenuProps>["items"][number];
 
-  const [current, setCurrent] = useState(window.location.pathname.slice(1));
+  const [current, setCurrent] = useState(
+    window.location.pathname.slice(1)
+  );
 
   const menu: MenuItem[] = [
     {
       label: "בית",
       key: "home",
-      icon: <HomeOutlined />,
+      icon: (
+        <HomeOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
     },
     {
       label: "התחברות",
       key: "login",
-      icon: <LoginOutlined />,
+      icon: (
+        <LoginOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
     },
   ];
 
   const loggedInMenu: MenuItem[] = [
     {
-      label: "בית",
-      key: "home",
-      icon: <HomeOutlined />,
+      label: "דאשבורד",
+      key: "dashboard",
+      icon: (
+        <HomeOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
     },
     {
       label: "טבלת הוצאות",
       key: "spending-table",
-      icon: <DollarOutlined />,
+      icon: (
+        <DollarOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
+    },
+    {
+      label: "דוחות וניתוח",
+      key: "budget",
+      icon: (
+        <DollarOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
     },
     {
       label: "הגדרות",
       key: "SubMenu",
-      icon: <SettingOutlined />,
+      icon: (
+        <SettingOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
       children: [
         {
           label: "משתמש",
           key: "user-settings",
         },
-
-        { label: "קטגוריות", key: "categories" },
+        {
+          label: "קטגוריות",
+          key: "categories",
+        },
       ],
     },
     {
       label: "התנתק",
       key: "logout",
-      icon: <LoginOutlined />,
+      icon: (
+        <LoginOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
     },
   ];
 
@@ -83,23 +120,35 @@ function Header(): JSX.Element {
   return (
     <div className="Header">
       {authStore.getState().user ? (
-        <>
-          <Menu
-            onClick={onClick}
-            selectedKeys={[current]}
-            items={loggedInMenu}
-            mode="horizontal"
-          />
-        </>
+        <Menu
+          onClick={onClick}
+          selectedKeys={[current]}
+          items={loggedInMenu}
+          mode="horizontal"
+          style={{
+            background: "transparent",
+            borderBottom: "1px solid #e8e8e8",
+            boxShadow:
+              "0 2px 8px rgba(0,0,0,0.06)",
+            padding: "0 20px",
+            fontSize: "16px",
+          }}
+        />
       ) : (
-        <>
-          <Menu
-            onClick={onClick}
-            selectedKeys={[current]}
-            items={menu}
-            mode="horizontal"
-          />
-        </>
+        <Menu
+          onClick={onClick}
+          selectedKeys={[current]}
+          items={menu}
+          mode="horizontal"
+          style={{
+            background: "transparent",
+            borderBottom: "1px solid #e8e8e8",
+            boxShadow:
+              "0 2px 8px rgba(0,0,0,0.06)",
+            padding: "0 20px",
+            fontSize: "16px",
+          }}
+        />
       )}
     </div>
   );

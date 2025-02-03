@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
+import "../../../Styles/SharedModals.css";
 import CategoryModel from "../../../Models/CategoryModel";
 import { authStore } from "../../../Redux/AuthState";
-
-import "./AddCategory.css";
+import { useState } from "react";
 import subCategoriesModel from "../../../Models/SubCategoryModel";
 import notifyService from "../../../Services/NotifyService";
 import spendingsService from "../../../Services/SpendingsService";
@@ -16,13 +16,25 @@ export function AddCategory(
 ): JSX.Element {
   const { register, handleSubmit } =
     useForm<CategoryModel>();
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   async function send(category: CategoryModel) {
-    const uid = authStore.getState().user?.uid;
-    const subCategories: subCategoriesModel[] =
-      [];
-    let newCategory: CategoryModel;
-    if (uid) {
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      const uid = authStore.getState().user?.uid;
+      const subCategories: subCategoriesModel[] =
+        [];
+
+      if (!uid) {
+        notifyService.error({
+          message: "משתמש לא מחובר",
+        });
+        throw new Error("משתמש לא מחובר");
+      }
+
       const newSubCategory =
         new subCategoriesModel(
           category.subCategories.toString(),
@@ -30,59 +42,70 @@ export function AddCategory(
         );
       subCategories.push(newSubCategory);
 
-      newCategory = new CategoryModel(
+      const newCategory = new CategoryModel(
         uid,
         category.name,
         subCategories
       );
-    } else {
-      notifyService.error("משתמש לא מחובר");
-      throw new Error("משתמש לא מחובר");
-    }
 
-    await spendingsService.addCategory(
-      newCategory
-    );
-    props.modalStateChanger(false);
+      await spendingsService.addCategory(
+        newCategory
+      );
+      props.modalStateChanger(false);
+      notifyService.success(
+        "הקטגוריה נוספה בהצלחה"
+      );
+    } catch (error) {
+      console.error(
+        "Error adding category:",
+        error
+      );
+      notifyService.error({
+        message: "שגיאה בהוספת הקטגוריה",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <div className="AddCategory">
-      <form onSubmit={handleSubmit(send)}>
+      <form
+        onSubmit={handleSubmit(send)}
+        className="modal-form"
+      >
         <div className="input-group">
           <input
             className="input"
-            autoFocus
             required
             type="text"
-            {...register("name", {
-              required: true,
-            })}
+            // placeholder="שם הקטגוריה"
+            {...register("name")}
           />
-          <label className="label" htmlFor="name">
-            שם קטגוריה
+          <label className="label">
+            שם הקטגוריה
           </label>
         </div>
         <div className="input-group">
           <input
             className="input"
-            autoFocus
             required
             type="text"
-            {...register("subCategories", {
-              required: true,
-            })}
+            // placeholder="שם תת-הקטגוריה"
+            {...register("subCategories")}
           />
-          <label
-            className="label"
-            htmlFor="subCategories"
+          <label className="label">
+            תת-קטגוריה
+          </label>
+        </div>
+        <div className="input-group">
+          <button
+            className="modern-button"
+            disabled={isSubmitting}
           >
-            תת קטגוריה
-          </label>
+            {isSubmitting ? "מוסיף..." : "הוסף"}
+          </button>
         </div>
-        <div className="input-group">
-          <button className="input">הוסף</button>
-        </div>{" "}
       </form>
     </div>
   );

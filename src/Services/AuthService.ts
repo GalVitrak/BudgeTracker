@@ -16,7 +16,43 @@ import {
   AuthActionType,
 } from "../Redux/AuthState";
 
+// שירות לניהול אימות משתמשים
 class AuthService {
+  // פונקציה מוגנת להשגת טוקן משתמש מהשרת
+  private getToken = httpsCallable(
+    functions,
+    "getToken"
+  );
+
+  // פונקציה פרטית לטיפול בטוקן והתחברות
+  private async handleTokenAndLogin(
+    uid: string,
+    email: string
+  ): Promise<void> {
+    try {
+      const response = await this.getToken({
+        uid,
+      });
+      const token = response.data;
+
+      // שמירת הטוקן ב-Redux
+      authStore.dispatch({
+        type: AuthActionType.Login,
+        payload: { token },
+      });
+
+      notifyService.success(
+        `משתמש ${email} התחבר בהצלחה`
+      );
+    } catch (error: any) {
+      notifyService.error({
+        message: "שגיאה בקבלת טוקן משתמש",
+      });
+      throw error;
+    }
+  }
+
+  // הרשמת משתמש חדש למערכת
   public async register(
     user: UserModel
   ): Promise<boolean> {
@@ -25,99 +61,74 @@ class AuthService {
       "register"
     );
 
-    let uid;
-
-    await createUserWithEmailAndPassword(
-      auth,
-      user.email,
-      user.password
-    )
-      .then((userCredential) => {
-        const user = userCredential.user;
-        notifyService.success(
-          `משתמש ${user?.email} נוצר בהצלחה`
+    try {
+      // יצירת משתמש חדש ב-Firebase Auth
+      const userCredential =
+        await createUserWithEmailAndPassword(
+          auth,
+          user.email,
+          user.password
         );
-        if (user) {
-          uid = user.uid;
-    
-          sendEmailVerification(user);
-        }
-      })
-      .catch((error) => {
-        notifyService.error(error);
-        return false;
-      });
 
-    user.id = uid;
-    await register(user)
-      .then((result) => {
-        console.log(
-          "🚀 ~ AuthService ~ result:",
-          result
-        );
-      })
-      .catch((error) => {
-        notifyService.error(error);
-        return false;
-      });
+      if (!userCredential.user) {
+        throw new Error("שגיאה ביצירת משתמש");
+      }
 
-    return true;
+      // הגדרת מזהה המשתמש
+      user.id = userCredential.user.uid;
+
+      // רישום המשתמש בשרת
+      await register(user);
+
+      // שליחת אימות מייל
+      await sendEmailVerification(
+        userCredential.user
+      );
+
+      // טיפול בטוקן והתחברות
+      await this.handleTokenAndLogin(
+        userCredential.user.uid,
+        user.email
+      );
+
+      return true;
+    } catch (error: any) {
+      notifyService.error(error.message);
+      return false;
+    }
   }
 
+  // התחברות משתמש קיים
   public async login(
     credentials: CredentialsModel
   ): Promise<boolean> {
-    const login = httpsCallable(
-      functions,
-      "login"
-    );
-
-    let token;
-    await login(credentials)
-      .then((response) => {
-        token = response.data;
-      })
-      .catch((error) => {
-        notifyService.error(error);
-        throw new Error(error);
-      });
-
-    const payload = {
-      token: token,
-    };
-
-    if (!token) {
-      notifyService.error("משתמש לא נמצא");
-      return false;
-    }
-
-    authStore.dispatch({
-      type: AuthActionType.Login,
-      payload: payload,
-    });
-
-    await signInWithEmailAndPassword(
-      auth,
-      credentials.email,
-      credentials.password
-    )
-      .then((userCredential) => {
-        const user = userCredential.user;
-        notifyService.success(
-          `משתמש ${user?.email} התחבר בהצלחה`
+    try {
+      // התחברות באמצעות Firebase Auth
+      const userCredential =
+        await signInWithEmailAndPassword(
+          auth,
+          credentials.email,
+          credentials.password
         );
 
-        if (!auth.currentUser?.emailVerified) {
-          notifyService.info(
-            "אנא אשר את כתובת הדואר האלקטרוני שלך"
-          );
-        }
-      })
-      .catch((error) => {
-        notifyService.error(error);
-      });
+      if (!userCredential.user) {
+        throw new Error("שגיאה בהתחברות");
+      }
 
-    return true;
+      // טיפול בטוקן והתחברות
+      await this.handleTokenAndLogin(
+        userCredential.user.uid,
+        credentials.email
+      );
+
+      return true;
+    } catch (error: any) {
+      notifyService.error({
+        code: error.code,
+        message: error.message,
+      });
+      return false;
+    }
   }
 }
 

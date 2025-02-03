@@ -20,55 +20,52 @@ function Register(): JSX.Element {
 
   return (
     <div className="Register">
-      <form onSubmit={handleSubmit(send)}>
-        <div className="input-group">
-          <input
-            className="input"
-            required
-            autoComplete="off"
-            type="text"
-            {...register("email")}
-          />
-          <label
-            className="label"
-            htmlFor="email"
-          >
-            דוא"ל
-          </label>
+      <div className="register-container">
+        <div className="register-form-section">
+          <form onSubmit={handleSubmit(send)}>
+            <div className="input-group">
+              <input
+                className="input"
+                required
+                autoComplete="off"
+                type="email"
+                {...register("email")}
+              />
+              <label className="label">
+                דוא"ל
+              </label>
+            </div>
+
+            <div className="input-group">
+              <input
+                className="input"
+                required
+                type="password"
+                {...register("password")}
+              />
+              <label className="label">
+                סיסמה
+              </label>
+            </div>
+
+            <div className="input-group">
+              <button className="modern-button">
+                הירשם
+              </button>
+            </div>
+          </form>
         </div>
-        <div className="input-group">
-          <input
-            className="input"
-            required
-            autoComplete="off"
-            type="text"
-            {...register("nickname")}
-          />
-          <label
-            className="label"
-            htmlFor="nickname"
-          >
-            שם
-          </label>
+
+        <div className="register-image-section">
+          <div className="register-image-content">
+            <h2>הרשמה</h2>
+            <p>
+              צור חשבון חדש כדי להתחיל לנהל את
+              ההוצאות שלך
+            </p>
+          </div>
         </div>
-        <div className="input-group">
-          <input
-            className="input"
-            required
-            type="password"
-            {...register("password")}
-          />
-          <label
-            className="label"
-            htmlFor="password"
-          >
-            סיסמה
-          </label>
-        </div>
-        <div className="input-group">
-          <button className="input">הירשם</button>
-        </div>{" "}
-      </form>
+      </div>
     </div>
   );
 }

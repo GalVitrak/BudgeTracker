@@ -1,0 +1,50 @@
+.EditSpending {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.input:hover:not(:disabled) {
+  border-color: #40a9ff;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.label {
+  font-size: 14px;
+  color: #666;
+}
+
+button.input {
+  background: white;
+  cursor: pointer;
+}
+
+button.input:hover:not(:disabled) {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+button.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+} 
