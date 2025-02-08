@@ -29,7 +29,7 @@ const addSpending = functions.https.onCall(
     const month = date.toDate().getMonth() + 1;
 
     const sum = data.sum;
-    const note = data.note;
+    const note = data.note || "";
 
     const spendingRef = await db
       .collection("spendings")
@@ -74,10 +74,6 @@ const addSpending = functions.https.onCall(
           );
 
           if (yearExists) {
-            console.log(
-              "year exists " + yearExists.year
-            );
-
             const monthExists =
               yearExists.months.find(
                 (monthDoc: any) =>
@@ -85,15 +81,7 @@ const addSpending = functions.https.onCall(
               );
 
             if (monthExists) {
-              console.log(
-                "month exists " +
-                  monthExists.month
-              );
             } else {
-              console.log(
-                "year exists but month not exists " +
-                  month
-              );
               yearExists.months.push({
                 month: month,
                 display: monthsList[month],

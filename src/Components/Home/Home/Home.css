@@ -1,9 +1,12 @@
 .Home {
-  max-width: 100%;
+  height: inherit;
+  width: inherit;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
 }
 
 .hero-section {
+  max-height: max-content;
   background: linear-gradient(
     135deg,
     #6b8cce 0%,
@@ -201,6 +204,18 @@
   .step {
     min-width: 200px;
     padding: 20px;
+  }
+
+  .Home {
+    touch-action: pan-y pinch-zoom;
+  }
+
+  /* Ensure all scrollable containers have momentum scrolling */
+  .hero-section,
+  .features-section,
+  .how-it-works,
+  .cta-section {
+    -webkit-overflow-scrolling: touch;
   }
 }
 

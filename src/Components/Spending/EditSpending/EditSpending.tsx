@@ -1,15 +1,18 @@
-import { useForm } from "react-hook-form";
-import "../../../Styles/SharedModals.css";
 import "./EditSpending.css";
-import SpendingModel from "../../../Models/SpendingModel";
-import CategoryModel from "../../../Models/CategoryModel";
 import { useEffect, useState } from "react";
-import { LoadingOutlined } from "@ant-design/icons";
-import { collection, doc, query, updateDoc, where } from "firebase/firestore";
-import { useCollectionData } from "react-firebase-hooks/firestore";
-import { db } from "../../../../firebase-config";
+import { useForm } from "react-hook-form";
 import { authStore } from "../../../Redux/AuthState";
+import {
+  collection,
+  query,
+  where,
+} from "firebase/firestore";
+import { db } from "../../../../firebase-config";
+import SpendingModel from "../../../Models/SpendingModel";
 import notifyService from "../../../Services/NotifyService";
+import { useCollectionData } from "react-firebase-hooks/firestore";
+import CategoryModel from "../../../Models/CategoryModel";
+import spendingsService from "../../../Services/SpendingsService";
 
 interface EditSpendingProps {
   modalStateChanger: Function;
@@ -17,33 +20,66 @@ interface EditSpendingProps {
   spending: SpendingModel;
 }
 
-export function EditSpending(props: EditSpendingProps): JSX.Element {
-  const { register, handleSubmit } = useForm<SpendingModel>({
-    defaultValues: {
-      category: props.spending.category,
-      subCategory: props.spending.subCategory,
-      date: new Date(props.spending.date.split(".").reverse().join("-")).toISOString().split("T")[0],
-      sum: props.spending.sum,
-      note: props.spending.note,
-    },
-  });
+export function EditSpending(
+  props: EditSpendingProps
+): JSX.Element {
+  const { register, handleSubmit } =
+    useForm<SpendingModel>({
+      defaultValues: {
+        category: props.spending.category,
+        subCategory: props.spending.subCategory,
+        date: new Date(
+          props.spending.date
+            .split(".")
+            .reverse()
+            .join("-")
+        )
+          .toISOString()
+          .split("T")[0],
+        sum: props.spending.sum,
+        note: props.spending.note,
+      },
+    });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
   const uid = authStore.getState().user?.uid;
-  const categoriesRef = collection(db, "categories");
-  const q = query(categoriesRef, where("uid", "in", ["allUsers", uid]));
-  const [categoriesData, loading] = useCollectionData(q);
-  const categories = categoriesData as CategoryModel[];
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date(props.spending.date.split(".").reverse().join("-")).toISOString().split("T")[0]
+  const categoriesRef = collection(
+    db,
+    "categories"
   );
-  const [selectedCategory, setSelectedCategory] = useState<CategoryModel>();
+  const q = query(
+    categoriesRef,
+    where("uid", "in", ["allUsers", uid])
+  );
+  const [categoriesData, loading] =
+    useCollectionData(q);
+  const categories =
+    categoriesData as CategoryModel[];
+  const [selectedDate, setSelectedDate] =
+    useState<string>(
+      new Date(
+        props.spending.date
+          .split(".")
+          .reverse()
+          .join("-")
+      )
+        .toISOString()
+        .split("T")[0]
+    );
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryModel>();
 
   useEffect(() => {
-    if (categories) {
-      setSelectedCategory(
-        categories.find((category) => category.name === props.spending.category)
+    if (categories && categories.length > 0) {
+      const initialCategory = categories.find(
+        (category) =>
+          category.name ===
+          props.spending.category
       );
+      if (initialCategory) {
+        setSelectedCategory(initialCategory);
+      }
     }
   }, [categories, props.spending.category]);
 
@@ -53,42 +89,38 @@ export function EditSpending(props: EditSpendingProps): JSX.Element {
     try {
       setIsSubmitting(true);
 
-      if (spending.category === "" || spending.subCategory === "") {
-        notifyService.info("בחר קטגוריה ותת קטגוריה");
+      if (
+        spending.category === "" ||
+        spending.subCategory === ""
+      ) {
+        notifyService.info(
+          "בחר קטגוריה ותת קטגוריה"
+        );
         return;
       }
 
-      const year = selectedDate.split("-")[0];
-      const month = selectedDate.split("-")[1];
-      spending.year = year;
-      spending.month = month;
-      
-      const spendingRef = doc(db, "spendings", props.spending.id);
-      await updateDoc(spendingRef, {
-        category: spending.category,
-        subCategory: spending.subCategory,
-        date: new Date(selectedDate),
-        sum: spending.sum,
-        note: spending.note,
-        year: spending.year,
-        month: spending.month,
-      });
+      const date = new Intl.DateTimeFormat(
+        "he-IL",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        }
+      ).format(new Date(selectedDate));
 
-      const date = new Intl.DateTimeFormat("he-IL", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).format(new Date(selectedDate));
-      
       spending.date = date;
       spending.id = props.spending.id;
 
+      await spendingsService.updateSpending(
+        spending
+      );
       props.spendingStateChanger(spending);
       props.modalStateChanger(false);
-      notifyService.success("ההוצאה עודכנה בהצלחה");
     } catch (error) {
-      console.error("Error updating spending:", error);
-      notifyService.error("שגיאה בעדכון ההוצאה");
+      console.error(
+        "Error updating spending:",
+        error
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -96,54 +128,102 @@ export function EditSpending(props: EditSpendingProps): JSX.Element {
 
   return (
     <div className="EditSpending">
-      <form onSubmit={handleSubmit(send)} className="modal-form">
+      <form
+        onSubmit={handleSubmit(send)}
+        className="modal-form"
+      >
         <div className="input-group">
           <select
-            defaultValue={props.spending.category}
+            value={props.spending.category}
             className="input"
             {...register("category", {
               onChange: (e) => {
-                setSelectedCategory(
-                  categories?.find((category) => category.name === e.target.value)
-                );
+                const newCategory =
+                  categories?.find(
+                    (category) =>
+                      category.name ===
+                      e.target.value
+                  );
+                setSelectedCategory(newCategory);
               },
             })}
           >
-            {loading && (
-              <option key={"loading"}>
-                <LoadingOutlined />
+            {loading ? (
+              <option
+                key="loading-state"
+                value=""
+                disabled
+              >
+                טוען...
               </option>
+            ) : (
+              <>
+                <option
+                  key="category-default"
+                  value=""
+                  disabled
+                >
+                  בחר קטגוריה
+                </option>
+                {categories &&
+                  categories.length > 0 &&
+                  categories.map(
+                    (category, index) => (
+                      <option
+                        key={
+                          category.id
+                            ? `category-${category.id}`
+                            : `category-index-${index}`
+                        }
+                        value={category.name}
+                      >
+                        {category.name}
+                      </option>
+                    )
+                  )}
+              </>
             )}
-            <option key={"select"} value="" disabled>
-              בחר קטגוריה
-            </option>
-            {categories?.map((category) => (
-              <option key={category.id} value={category.name}>
-                {category.name}
-              </option>
-            ))}
           </select>
-          <label className="label" htmlFor="category">
+          <label
+            className="label"
+            htmlFor="category"
+          >
             קטגוריה
           </label>
         </div>
 
         <div className="input-group">
           <select
-            defaultValue={props.spending.subCategory}
+            defaultValue={
+              props.spending.subCategory
+            }
             className="input"
             {...register("subCategory")}
           >
-            <option key={"select"} value="" disabled>
+            <option
+              key="subcategory-default"
+              value=""
+              disabled
+            >
               בחר תת-קטגוריה
             </option>
-            {selectedCategory?.subCategories?.map((subCategory) => (
-              <option key={subCategory.name} value={subCategory.name}>
-                {subCategory.name}
-              </option>
-            ))}
+            {selectedCategory?.subCategories?.map(
+              (subCategory, index) => (
+                <option
+                  key={`subcategory-${
+                    selectedCategory.id || "noId"
+                  }-${index}-${subCategory.name}`}
+                  value={subCategory.name}
+                >
+                  {subCategory.name}
+                </option>
+              )
+            )}
           </select>
-          <label className="label" htmlFor="category">
+          <label
+            className="label"
+            htmlFor="category"
+          >
             תת-קטגוריה
           </label>
         </div>
@@ -193,11 +273,14 @@ export function EditSpending(props: EditSpendingProps): JSX.Element {
         </div>
 
         <div className="input-group">
-          <button className="input" disabled={isSubmitting}>
+          <button
+            className="modern-button"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "מעדכן..." : "עדכן"}
           </button>
         </div>
       </form>
     </div>
   );
-} 
+}

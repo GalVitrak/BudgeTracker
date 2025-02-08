@@ -1,15 +1,16 @@
 /**
  * NotFound Component
- * Displays a 404 error page when a route is not found
+ * Displays a fun and friendly 404 error page when a route is not found
  */
 
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
 import "./NotFound.css";
+import { authStore } from "../../../Redux/AuthState";
 
 /**
- * NotFound component that provides a user-friendly 404 error page
- * @returns The 404 error page component
+ * NotFound component that provides a humorous 404 error page
+ * @returns The 404 error page component with a fun twist
  */
 function NotFound(): JSX.Element {
   const navigate = useNavigate();
@@ -22,26 +23,33 @@ function NotFound(): JSX.Element {
           <span
             className="emoji"
             role="img"
-            aria-label="Confused face"
+            aria-label="Detective face"
           >
-            😕
+            🕵️
           </span>
         </div>
         <h2 className="error-message">
-          העמוד לא נמצא
+          אופס! נראה שהלכת לאיבוד...
         </h2>
         <p className="error-description">
-          מצטערים, אך העמוד שחיפשת אינו קיים.
+          הדף שחיפשת החליט לצאת לחופשה 🏖️
           <br />
-          אולי הקישור שגוי או שהעמוד הוסר.
+          אולי הוא מתחבא במקום אחר, או שפשוט
+          התעייף מכל הקליקים
         </p>
         <Button
           type="primary"
           size="large"
           className="home-button"
-          onClick={() => navigate("/")}
+          onClick={() => {
+            if (authStore.getState().user) {
+              navigate("/dashboard");
+            } else {
+              navigate("/home");
+            }
+          }}
         >
-          חזור לדף הבית
+          קח אותי הביתה 🏠
         </Button>
       </div>
     </div>

@@ -46,7 +46,7 @@ body {
     0 5px 15px rgba(0, 0, 0, 0.05);
   width: 100%;
   max-width: 1000px;
-  height: min(700px, 90vh);
+  height: max-content;
   overflow: hidden;
   position: relative;
   z-index: 1;
@@ -139,37 +139,6 @@ body {
   color: #6b8cce;
 }
 
-button.input {
-  background: #6b8cce;
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-  border: none;
-  transition: all 0.3s ease;
-}
-
-button.input:hover {
-  background: #5a7ab8;
-  transform: translateY(-2px);
-}
-
-.regInit {
-  text-align: center;
-  color: #666;
-  cursor: pointer;
-  margin-top: 30px;
-  font-size: 1em;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  padding: 10px;
-  border-radius: 8px;
-}
-
-.regInit:hover {
-  color: #6b8cce;
-  background-color: rgba(107, 140, 206, 0.05);
-}
-
 button.modern-button {
   width: 100%;
   padding: 12px;
@@ -195,10 +164,78 @@ button.modern-button:disabled {
   transform: none;
 }
 
+.login-links {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+.login-links span {
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 8px;
+  font-size: 0.9em;
+}
+
+.login-links span:hover {
+  color: #6b8cce;
+}
+
+/* Modal Styles */
+.modern-modal .ant-modal-content {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.modern-modal .ant-modal-header {
+  background: linear-gradient(
+    45deg,
+    #6b8cce,
+    #8b9dc3
+  );
+  padding: 16px 24px;
+  border-bottom: none;
+}
+
+.modern-modal .ant-modal-title {
+  color: white;
+  font-size: 1.2em;
+}
+
+.modern-modal .ant-modal-close {
+  color: white;
+}
+
+.modern-modal .ant-modal-body {
+  padding: 24px;
+}
+
+.modern-modal .ant-modal-footer {
+  border-top: none;
+  padding: 16px 24px;
+}
+
+.modern-modal .ant-btn-primary {
+  background: #6b8cce;
+  border: none;
+}
+
+.modern-modal .ant-btn-primary:hover {
+  background: #5a7ab8;
+}
+
 @media (max-width: 768px) {
   .Login {
-    padding: 0;
-    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    min-height: 100vh;
+    height: auto;
+    box-sizing: border-box;
   }
 
   .Login::before {
@@ -207,10 +244,9 @@ button.modern-button:disabled {
 
   .login-container {
     flex-direction: column;
-    height: 100%;
-    max-height: 100%;
+    height: auto;
+    max-height: none;
     border-radius: 20px;
-    box-shadow: none;
     transform: none;
   }
 
@@ -255,8 +291,11 @@ button.modern-button:disabled {
     font-size: 14px;
   }
 
-  .regInit {
+  .login-links {
     margin: 15px 0;
+  }
+
+  .login-links span {
     padding: 8px;
     font-size: 0.9em;
   }

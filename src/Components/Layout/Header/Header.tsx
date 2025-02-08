@@ -1,10 +1,14 @@
 import "./Header.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  DollarOutlined,
-  HomeOutlined,
+  TableOutlined,
+  LogoutOutlined,
+  MenuOutlined,
+  CloseOutlined,
+  PieChartOutlined,
   SettingOutlined,
   LoginOutlined,
+  HomeOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Menu } from "antd";
@@ -13,11 +17,15 @@ import {
   authStore,
   AuthActionType,
 } from "../../../Redux/AuthState";
-import { auth } from "../../../../firebase-config";
 import notifyService from "../../../Services/NotifyService";
 
 function Header(): JSX.Element {
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] =
+    useState(false);
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth <= 768
+  );
 
   type MenuItem =
     Required<MenuProps>["items"][number];
@@ -25,6 +33,29 @@ function Header(): JSX.Element {
   const [current, setCurrent] = useState(
     window.location.pathname.slice(1)
   );
+
+  useEffect(() => {
+    setCurrent(window.location.pathname.slice(1));
+  }, [window.location.pathname]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+      if (window.innerWidth > 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener(
+      "resize",
+      handleResize
+    );
+    return () =>
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
+  }, []);
 
   const menu: MenuItem[] = [
     {
@@ -61,44 +92,34 @@ function Header(): JSX.Element {
       label: "טבלת הוצאות",
       key: "spending-table",
       icon: (
-        <DollarOutlined
+        <TableOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
+    },
+    {
+      label: "הגדרות תקציב",
+      key: "budget-settings",
+      icon: (
+        <SettingOutlined
           style={{ fontSize: "18px" }}
         />
       ),
     },
     {
       label: "דוחות וניתוח",
-      key: "budget",
+      key: "budget-graph",
       icon: (
-        <DollarOutlined
+        <PieChartOutlined
           style={{ fontSize: "18px" }}
         />
       ),
-    },
-    {
-      label: "הגדרות",
-      key: "SubMenu",
-      icon: (
-        <SettingOutlined
-          style={{ fontSize: "18px" }}
-        />
-      ),
-      children: [
-        {
-          label: "משתמש",
-          key: "user-settings",
-        },
-        {
-          label: "קטגוריות",
-          key: "categories",
-        },
-      ],
     },
     {
       label: "התנתק",
       key: "logout",
       icon: (
-        <LoginOutlined
+        <LogoutOutlined
           style={{ fontSize: "18px" }}
         />
       ),
@@ -110,46 +131,82 @@ function Header(): JSX.Element {
       authStore.dispatch({
         type: AuthActionType.Logout,
       });
+      notifyService.success("התנתקת בהצלחה");
       navigate("/home");
       return;
     }
     navigate("/" + e.key);
     setCurrent(e.key);
+    if (isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   return (
     <div className="Header">
-      {authStore.getState().user ? (
-        <Menu
-          onClick={onClick}
-          selectedKeys={[current]}
-          items={loggedInMenu}
-          mode="horizontal"
-          style={{
-            background: "transparent",
-            borderBottom: "1px solid #e8e8e8",
-            boxShadow:
-              "0 2px 8px rgba(0,0,0,0.06)",
-            padding: "0 20px",
-            fontSize: "16px",
-          }}
-        />
-      ) : (
-        <Menu
-          onClick={onClick}
-          selectedKeys={[current]}
-          items={menu}
-          mode="horizontal"
-          style={{
-            background: "transparent",
-            borderBottom: "1px solid #e8e8e8",
-            boxShadow:
-              "0 2px 8px rgba(0,0,0,0.06)",
-            padding: "0 20px",
-            fontSize: "16px",
-          }}
-        />
+      {isMobile && (
+        <button
+          className="mobile-menu-toggle"
+          onClick={toggleMobileMenu}
+        >
+          {isMobileMenuOpen ? (
+            <CloseOutlined
+              style={{ fontSize: "24px" }}
+            />
+          ) : (
+            <MenuOutlined
+              style={{ fontSize: "24px" }}
+            />
+          )}
+        </button>
       )}
+      <div
+        className={`menu-container ${
+          isMobileMenuOpen
+            ? "mobile-menu-open"
+            : ""
+        }`}
+      >
+        {authStore.getState().user ? (
+          <Menu
+            onClick={onClick}
+            selectedKeys={[current]}
+            items={loggedInMenu}
+            mode={
+              isMobile ? "vertical" : "horizontal"
+            }
+            style={{
+              background: "transparent",
+              borderBottom: "1px solid #e8e8e8",
+              boxShadow:
+                "0 2px 8px rgba(0,0,0,0.06)",
+              padding: "0 20px",
+              fontSize: "16px",
+            }}
+          />
+        ) : (
+          <Menu
+            onClick={onClick}
+            selectedKeys={[current]}
+            items={menu}
+            mode={
+              isMobile ? "vertical" : "horizontal"
+            }
+            style={{
+              background: "transparent",
+              borderBottom: "1px solid #e8e8e8",
+              boxShadow:
+                "0 2px 8px rgba(0,0,0,0.06)",
+              padding: "0 20px",
+              fontSize: "16px",
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

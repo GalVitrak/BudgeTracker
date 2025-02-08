@@ -1,13 +1,12 @@
 .SpendingTable {
-  height: 95%;
-  width: 95%;
+  height: inherit;
+  width: inherit;
   max-width: 1200px;
-  margin: 60px auto 0;
-  padding: 24px;
-  min-height: calc(100vh - 120px);
-  overflow-x: hidden;
-  overflow-y: auto;
-  box-sizing: border-box;
+  padding: 60px;
+  position: relative;
+  z-index: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table-header {
@@ -29,9 +28,10 @@
 }
 
 .filter-month {
+  direction: ltr;
   display: flex;
   gap: 16px;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex: 1;
   align-items: center;
 }
@@ -184,9 +184,41 @@
   .SpendingTable {
     width: 100%;
     padding: 16px;
-    margin: 40px 0 0 0;
+    margin: 60px 0 0 0;
+    height: calc(100vh - 60px);
+    position: relative;
+    z-index: 1;
     overflow-y: auto;
-    height: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .table-content {
+    overflow: visible;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .ant-table-wrapper {
+    overflow: visible;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .ant-table-body {
+    overflow: visible !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+    padding-top: 16px;
+    margin-top: -16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
   .table-header {
@@ -243,6 +275,18 @@
   .table-footer {
     font-size: 14px;
     padding: 12px;
+  }
+
+  .table-title {
+    margin-bottom: 24px;
+  }
+
+  .table-title h1 {
+    font-size: 1.5rem;
+  }
+
+  .table-title p {
+    font-size: 1rem;
   }
 }
 
@@ -344,4 +388,52 @@
   .expanded-item strong {
     min-width: unset;
   }
+
+  /* Improve action buttons for mobile */
+  .action-buttons {
+    padding: 8px 0;
+    display: flex;
+    justify-content: center;
+    gap: 32px !important;
+  }
+
+  .action-icon {
+    font-size: 24px !important;
+    padding: 8px;
+  }
+
+  .action-icon.edit,
+  .action-icon.delete {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+  }
+
+  .action-icon.edit:active,
+  .action-icon.delete:active {
+    background-color: #e8e8e8;
+  }
+}
+
+.table-title {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 0 16px;
+}
+
+.table-title h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+  font-weight: 600;
+}
+
+.table-title p {
+  color: #666;
+  margin: 8px 0 0 0;
+  font-size: 1.1rem;
 }

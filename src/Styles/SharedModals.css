@@ -1,23 +1,36 @@
-/* Modal Styles */
+/* ==========================================================================
+   Shared Modal Styles - Main configuration for all modal components
+   ========================================================================== */
+
+/* Base Modal Configuration
+   ========================================================================== */
 .ant-modal {
   direction: rtl;
   width: auto !important;
-  min-width: 300px;
-  max-width: 90vw;
+  min-width: 450px; /* Desktop default width */
+  max-width: 90vw; /* Prevent modals from becoming too wide */
 }
 
+/* Modal Content Styling
+   ========================================================================== */
 .ant-modal-content {
-  padding: 32px 40px;
+  padding: 24px !important;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+.ant-modal-body {
+  padding: 0 !important; /* Remove default padding to allow custom control */
+}
+
+/* Modal Header Configuration
+   ========================================================================== */
 .ant-modal-header {
   margin-bottom: 24px;
   padding: 0;
   border: none;
   position: relative;
-  padding-left: 28px; /* מרווח עבור כפתור הסגירה */
+  padding-left: 28px; /* Space for close button */
 }
 
 .ant-modal-title {
@@ -28,6 +41,8 @@
   padding: 0;
 }
 
+/* Close Button Styling
+   ========================================================================== */
 .ant-modal-close {
   position: absolute;
   left: 0;
@@ -40,24 +55,35 @@
   justify-content: center;
 }
 
-.ant-modal-body {
-  padding: 0;
-}
-
-/* Form Styles */
+/* Form Layout and Structure
+   ========================================================================== */
 .modal-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-width: 320px;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 16px 24px;
+  box-sizing: border-box;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Input Groups
+   ========================================================================== */
+.modal-form .input-group {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 24px;
 }
 
+.modal-form .input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Button Styles
+   ========================================================================== */
+/* Primary Button */
 .modern-button {
   width: 100%;
   padding: 15px;
@@ -71,17 +97,20 @@
   transition: all 0.3s ease;
 }
 
-.modern-button:hover {
+/* Button States */
+.modern-button:hover:not(:disabled) {
   background: #5a7ab8;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(107, 140, 206, 0.2);
 }
+
 .modern-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* Submit Button Styles */
+/* Submit Button Variants
+   ========================================================================== */
 .input[type="submit"],
 button.input,
 .modern-button[type="submit"] {
@@ -93,6 +122,7 @@ button.input,
   margin-top: 8px;
 }
 
+/* Submit Button States */
 .input[type="submit"]:hover:not(:disabled),
 button.input:hover:not(:disabled),
 .modern-button[type="submit"]:hover:not(
@@ -114,19 +144,36 @@ button.input:disabled,
   box-shadow: none;
 }
 
-/* Mobile Adjustments */
+/* Component Specific Styles
+   ========================================================================== */
+.AddCategory,
+.AddSubCategory,
+.AddSpending,
+.EditSpending {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Responsive Design
+   ========================================================================== */
+/* Tablet and Mobile Styles */
 @media (max-width: 768px) {
   .ant-modal {
     margin: 16px !important;
     width: calc(100% - 32px) !important;
     max-width: 100%;
+    min-width: 300px; /* Reset width for mobile */
     top: 0;
   }
 
   .ant-modal-content {
     padding: 24px;
     min-height: auto;
-    max-height: calc(100vh - 32px);
+    max-height: calc(
+      100vh - 32px
+    ); /* Prevent modal from exceeding viewport */
     border-radius: 12px;
     overflow-y: auto;
   }
@@ -136,17 +183,15 @@ button.input:disabled,
   }
 
   .ant-modal-title {
-    font-size: 18px;
+    font-size: 18px; /* Slightly smaller title on mobile */
   }
 
   .modal-form {
-    gap: 16px;
-    min-width: unset;
-    width: 100%;
+    padding: 15px;
   }
 }
 
-/* התאמות נוספות למסכים קטנים מאוד */
+/* Small Mobile Devices */
 @media (max-width: 380px) {
   .ant-modal {
     margin: 8px !important;

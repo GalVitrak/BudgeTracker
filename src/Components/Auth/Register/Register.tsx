@@ -1,20 +1,49 @@
+/**
+ * Register Component
+ * Handles new user registration functionality
+ */
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import UserModel from "../../../Models/UserModel";
 import authService from "../../../Services/AuthService";
+import notifyService from "../../../Services/NotifyService";
 import "./Register.css";
-import { useForm } from "react-hook-form";
 
+/**
+ * Register component that provides new user registration functionality
+ * @returns The registration form component
+ */
 function Register(): JSX.Element {
   const navigate = useNavigate();
   const { register, handleSubmit } =
     useForm<UserModel>();
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
+  /**
+   * Handles the registration form submission
+   * @param user - The new user's registration data
+   */
   async function send(user: UserModel) {
-    const proceed = await authService.register(
-      user
-    );
-    if (proceed) {
-      navigate("/home");
+    if (isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      await authService
+        .register(user)
+        .then((isLoggedIn) => {
+          if (isLoggedIn) {
+            navigate("/dashboard");
+          }
+        })
+        .catch((error) => {
+          notifyService.error(error);
+          throw new Error(error);
+        });
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -29,7 +58,10 @@ function Register(): JSX.Element {
                 required
                 autoComplete="off"
                 type="email"
-                {...register("email")}
+                {...register(
+                  "email",
+                  UserModel.emailVerification
+                )}
               />
               <label className="label">
                 דוא"ל
@@ -41,7 +73,10 @@ function Register(): JSX.Element {
                 className="input"
                 required
                 type="password"
-                {...register("password")}
+                {...register(
+                  "password",
+                  UserModel.passwordVerification
+                )}
               />
               <label className="label">
                 סיסמה
@@ -49,8 +84,13 @@ function Register(): JSX.Element {
             </div>
 
             <div className="input-group">
-              <button className="modern-button">
-                הירשם
+              <button
+                className="modern-button"
+                disabled={isSubmitting}
+              >
+                {isSubmitting
+                  ? "נרשם..."
+                  : "הירשם"}
               </button>
             </div>
           </form>

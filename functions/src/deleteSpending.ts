@@ -4,12 +4,10 @@ import { db } from ".";
 const deleteSpending = functions.https.onCall(
   async (data, context) => {
     const spendingId = data.spendingId;
-    console.log(spendingId);
     
     const spendingRef = db
       .collection("spendings")
       .doc(spendingId);
-    console.log(spendingRef);
     const spendingDoc = await spendingRef.get();
     if (!spendingDoc.exists) {
       throw new functions.https.HttpsError(

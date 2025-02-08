@@ -1,28 +1,54 @@
 import * as functions from "firebase-functions/v1";
 import { db } from ".";
+import { FieldValue } from "firebase-admin/firestore";
 
 const addSubCategory = functions.https.onCall(
   async (data, context) => {
-    const subCategories = data.subCategories;
-    const id = data.id;
+    const { categoryId, newSubCategory } = data;
 
-    await db
-      .collection("categories")
-      .where("id", "==", id)
-      .get()
-      .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
-          doc.ref.update({
-            subCategories: subCategories,
-          });
-        });
-      })
-      .catch((error) => {
+    if (!categoryId) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Category ID is required"
+      );
+    }
+
+    if (!newSubCategory || !newSubCategory.name) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "New subcategory with name is required"
+      );
+    }
+
+    try {
+      const docRef = db
+        .collection("categories")
+        .doc(categoryId);
+      const doc = await docRef.get();
+
+      if (!doc.exists) {
         throw new functions.https.HttpsError(
-          "unknown",
-          error
+          "not-found",
+          "Category not found"
         );
+      }
+
+      await docRef.update({
+        subCategories: FieldValue.arrayUnion(
+          newSubCategory
+        ),
       });
+    } catch (error) {
+      console.error(
+        "Error in addSubCategory:",
+        error
+      );
+      throw new functions.https.HttpsError(
+        "internal",
+        "Error adding subcategory",
+        error
+      );
+    }
   }
 );
 

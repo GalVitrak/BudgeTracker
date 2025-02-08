@@ -3,17 +3,15 @@ import { db } from ".";
 
 const register = functions.https.onCall(
   async (data, context) => {
-    const uid = data.id;
+    const uid = data.uid;
     const role = "User";
-    const userRef = await db
+    await db
       .collection("users")
 
       .add({
         uid,
         role,
       });
-
-    return userRef.id;
   }
 );
 

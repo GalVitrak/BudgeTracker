@@ -32,7 +32,7 @@ export class AuthState {
 
   public constructor() {
     this.token = localStorage.getItem(
-      "SpendingCheckToken"
+      "BudgeTrackerToken"
     );
 
     if (this.token) {
@@ -43,12 +43,13 @@ export class AuthState {
       } else {
         this.token = null;
         localStorage.removeItem(
-          "SpendingCheckToken"
+          "BudgeTrackerToken"
         );
       }
     }
   }
 }
+
 export enum AuthActionType {
   Register = "register",
   Login = "login",
@@ -79,7 +80,7 @@ export function authReducer(
         container = jwtDecode(newState.token);
         newState.user = container.user;
         localStorage.setItem(
-          "SpendingCheckToken",
+          "BudgeTrackerToken",
           newState.token
         );
       }
@@ -89,7 +90,7 @@ export function authReducer(
       newState.token = null;
       newState.user = null;
       localStorage.removeItem(
-        "SpendingCheckToken"
+        "BudgeTrackerToken"
       );
       break;
   }

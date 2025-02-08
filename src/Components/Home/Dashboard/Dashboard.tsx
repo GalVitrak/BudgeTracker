@@ -15,18 +15,22 @@ import {
   collection,
   query,
   where,
-  Timestamp,
   orderBy,
-  limit,
 } from "firebase/firestore";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../../../../firebase-config";
 import { authStore } from "../../../Redux/AuthState";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import SpendingModel from "../../../Models/SpendingModel";
 import { AddSpending } from "../../Spending/AddSpending/AddSpending";
 import { useNavigate } from "react-router-dom";
-import notifyService from "../../../Services/NotifyService";
+import dayjs from "dayjs";
+import { getCategoryEmoji } from "../../../Utils/CategoryUtils";
+// import notifyService from "../../../Services/NotifyService";
 
 function Dashboard(): JSX.Element {
   const navigate = useNavigate();
@@ -37,45 +41,32 @@ function Dashboard(): JSX.Element {
 
   const uid = authStore.getState().user?.uid;
 
-  // בדיקת התחברות והפניה לדף ההתחברות אם המשתמש לא מחובר
-  useEffect(() => {
-    if (!uid) {
-      notifyService.error({
-        message: "יש להתחבר למערכת תחילה",
-      });
-      navigate("/login");
-      return;
-    }
-  }, [uid, navigate]);
-
-  // אם המשתמש לא מחובר, לא נציג את תוכן הדף
-  if (!uid) {
-    return <div className="Dashboard"></div>;
-  }
-
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1;
+  // Fix date handling to ensure correct current date
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // Keep as number for Firestore query
 
   const spendingsRef = collection(
     db,
     "spendings"
   );
-  const q = uid
-    ? query(
-        spendingsRef,
-        where("uid", "==", uid),
-        orderBy("date", "desc"),
-        limit(5)
-      )
-    : null;
 
-  const [snapshot, loading, error] =
-    useCollectionData(q);
-  const spendings = snapshot?.map((spending) => ({
-    ...spending,
-    sum: Number(spending.sum),
-  })) as SpendingModel[];
+  const spendingQuery = useMemo(() => {
+    if (!uid) return null;
+
+    // Year and month are stored as numbers in Firestore
+    const q = query(
+      spendingsRef,
+      where("uid", "==", uid),
+      where("year", "==", currentYear),
+      where("month", "==", currentMonth),
+      orderBy("date", "desc")
+    );
+    return q;
+  }, [uid, currentYear, currentMonth]);
+
+  const [spendingSnapshot, loading, error] =
+    useCollection(spendingQuery);
 
   const [totalSpending, setTotalSpending] =
     useState<number>(0);
@@ -83,50 +74,108 @@ function Dashboard(): JSX.Element {
     useState<number>(0);
   const [lowestSpending, setLowestSpending] =
     useState<number>(0);
+  const [recentSpendings, setRecentSpendings] =
+    useState<SpendingModel[]>([]);
 
   useEffect(() => {
-    if (snapshot && snapshot.length > 0) {
-      // Calculate total spending
-      const total = snapshot.reduce(
-        (sum, spending) =>
-          sum + Number(spending.sum),
-        0
+    if (error) {
+      console.error(
+        "Error fetching data:",
+        error
       );
-      setTotalSpending(total);
-
-      // Find highest spending
-      const highest = Math.max(
-        ...snapshot.map((spending) =>
-          Number(spending.sum)
-        )
-      );
-      setHighestSpending(highest);
-
-      // Find lowest spending
-      const lowest = Math.min(
-        ...snapshot.map((spending) =>
-          Number(spending.sum)
-        )
-      );
-      setLowestSpending(lowest);
-    } else {
-      // Reset values if no data
-      setTotalSpending(0);
-      setHighestSpending(0);
-      setLowestSpending(0);
+      return;
     }
-  }, [snapshot]);
+
+    if (spendingSnapshot) {
+      const extractedSpendings =
+        spendingSnapshot.docs.map((doc) => {
+          const data = doc.data();
+
+          if (!data.date?.seconds) {
+            console.warn(
+              "Missing date timestamp for doc:",
+              doc.id
+            );
+          }
+
+          return new SpendingModel(
+            data.uid,
+            data.category,
+            data.subCategory,
+            data.date?.seconds
+              ? dayjs
+                  .unix(data.date.seconds)
+                  .format("DD.MM.YYYY")
+              : dayjs().format("DD.MM.YYYY"),
+            Number(data.sum),
+            data.note,
+            doc.id
+          );
+        });
+
+      setRecentSpendings(extractedSpendings);
+
+      if (extractedSpendings.length > 0) {
+        const total = extractedSpendings.reduce(
+          (sum, spending) =>
+            sum + Number(spending.sum),
+          0
+        );
+        setTotalSpending(total);
+
+        const spendingSums =
+          extractedSpendings.map((s) =>
+            Number(s.sum)
+          );
+        const highest = Math.max(...spendingSums);
+        setHighestSpending(highest);
+
+        const lowest = Math.min(...spendingSums);
+        setLowestSpending(lowest);
+      } else {
+        setRecentSpendings([]);
+        setTotalSpending(0);
+        setHighestSpending(0);
+        setLowestSpending(0);
+      }
+    }
+  }, [spendingSnapshot]);
 
   useEffect(() => {
     if (newSpending) {
-      // If we have a new spending, add it to the list
-      const updatedSpendings = snapshot
-        ? [...snapshot, newSpending]
-        : [newSpending];
-      // The useCollectionData hook will automatically update with the new data
+      // Only add the new spending if it's for the current month and year
+      if (
+        Number(newSpending.month) ===
+          currentMonth &&
+        Number(newSpending.year) === currentYear
+      ) {
+        setRecentSpendings((prev) => {
+          const updated = [
+            newSpending,
+            ...prev,
+          ].slice(0, 5);
+          return updated.sort((a, b) => {
+            const dateA = new Date(
+              a.date
+                .split(".")
+                .reverse()
+                .join("-")
+            );
+            const dateB = new Date(
+              b.date
+                .split(".")
+                .reverse()
+                .join("-")
+            );
+            return (
+              dateB.getTime() - dateA.getTime()
+            );
+          });
+        });
+      }
       setNewSpending(null);
     }
-  }, [newSpending]);
+  }, [newSpending, currentMonth, currentYear]);
 
   return (
     <div className="Dashboard">
@@ -149,6 +198,7 @@ function Dashboard(): JSX.Element {
                     : totalSpending
                 }
                 valueStyle={{ color: "#6b8cce" }}
+                precision={2}
                 prefix={
                   <>
                     <WalletFilled className="total-icon" />{" "}
@@ -168,6 +218,7 @@ function Dashboard(): JSX.Element {
                     : highestSpending
                 }
                 valueStyle={{ color: "#ff4d4f" }}
+                precision={2}
                 prefix={
                   <>
                     <RiseOutlined className="highest-icon" />{" "}
@@ -187,6 +238,7 @@ function Dashboard(): JSX.Element {
                     : lowestSpending
                 }
                 valueStyle={{ color: "#52c41a" }}
+                precision={2}
                 prefix={
                   <>
                     <FallOutlined className="lowest-icon" />{" "}
@@ -225,7 +277,7 @@ function Dashboard(): JSX.Element {
               <button
                 className="modern-button"
                 onClick={() =>
-                  navigate("/budget")
+                  navigate("/budget-graph")
                 }
               >
                 צפה בדוחות
@@ -238,7 +290,12 @@ function Dashboard(): JSX.Element {
               <p>
                 הגדר תקציב חודשי לניהול הוצאות
               </p>
-              <button className="modern-button">
+              <button
+                className="modern-button"
+                onClick={() =>
+                  navigate("/budget-settings")
+                }
+              >
                 הגדר תקציב
               </button>
             </Card>
@@ -258,28 +315,16 @@ function Dashboard(): JSX.Element {
             >
               טוען...
             </div>
-          ) : !spendings ||
-            spendings.length === 0 ? (
+          ) : !recentSpendings ||
+            recentSpendings.length === 0 ? (
             <div
               key="empty"
               className="activity-item empty-state"
             >
-              עדיין לא נוספו הוצאות
+              עדיין לא נוספו הוצאות החודש
             </div>
           ) : (
-            spendings
-              .sort((a, b) => {
-                const dateA = (
-                  a.date as unknown as Timestamp
-                ).toDate();
-                const dateB = (
-                  b.date as unknown as Timestamp
-                ).toDate();
-                return (
-                  dateB.getTime() -
-                  dateA.getTime()
-                );
-              })
+            recentSpendings
               .slice(0, 3)
               .map((spending) => (
                 <div
@@ -304,14 +349,20 @@ function Dashboard(): JSX.Element {
                         "ללא הערה"}
                     </p>
                     <p className="activity-sum">
-                      ₪{spending.sum}
+                      ₪
+                      {Number(
+                        spending.sum
+                      ).toFixed(2)}
                     </p>
                   </div>
                   <div className="activity-date">
                     {formatDate(
-                      (
-                        spending.date as unknown as Timestamp
-                      ).toDate()
+                      new Date(
+                        spending.date
+                          .split(".")
+                          .reverse()
+                          .join("-")
+                      )
                     )}
                   </div>
                 </div>
@@ -337,24 +388,6 @@ function Dashboard(): JSX.Element {
   );
 }
 
-// Helper function to get emoji based on category
-function getCategoryEmoji(
-  category: string
-): string {
-  const emojiMap: { [key: string]: string } = {
-    מזון: "🍽️",
-    קניות: "🛒",
-    תחבורה: "🚗",
-    בילויים: "🎉",
-    חשבונות: "📄",
-    בית: "🏠",
-    בריאות: "⚕️",
-    חינוך: "📚",
-    אחר: "📌",
-  };
-  return emojiMap[category] || "📌";
-}
-
 // Helper function to format date
 function formatDate(date: Date): string {
   const today = new Date();
@@ -374,6 +407,7 @@ function formatDate(date: Date): string {
     return new Intl.DateTimeFormat("he-IL", {
       day: "numeric",
       month: "numeric",
+      year: "numeric",
     }).format(date);
   }
 }

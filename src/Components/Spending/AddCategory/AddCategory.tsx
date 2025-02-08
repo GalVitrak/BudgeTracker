@@ -52,9 +52,7 @@ export function AddCategory(
         newCategory
       );
       props.modalStateChanger(false);
-      notifyService.success(
-        "הקטגוריה נוספה בהצלחה"
-      );
+    
     } catch (error) {
       console.error(
         "Error adding category:",

@@ -1,4 +1,5 @@
 import "./SpendingTable.css";
+import "../../../Styles/SharedModals.css";
 import {
   useEffect,
   useState,
@@ -9,20 +10,18 @@ import type { TableProps } from "antd";
 import {
   DeleteOutlined,
   EditOutlined,
-  LoadingOutlined,
 } from "@ant-design/icons";
 import {
   collection,
   query,
   where,
-  deleteDoc,
-  doc,
+  orderBy,
 } from "firebase/firestore";
 import { useCollection } from "react-firebase-hooks/firestore";
 import dayjs from "dayjs";
-import "../../../Styles/SharedModals.css";
-import { Modal as AntModal } from "antd";
-import notifyService from "../../../Services/NotifyService";
+import { getCategoryEmoji } from "../../../Utils/CategoryUtils";
+import { authStore } from "../../../Redux/AuthState";
+import spendingsService from "../../../Services/SpendingsService";
 
 // Components
 import { AddSpending } from "../AddSpending/AddSpending";
@@ -32,13 +31,11 @@ import { EditSpending } from "../EditSpending/EditSpending";
 
 // Services & Config
 import { db } from "../../../../firebase-config";
-import { authStore } from "../../../Redux/AuthState";
 
 // Models
 import SpendingModel from "../../../Models/SpendingModel";
 import DatesModel from "../../../Models/DatesModel";
 import YearsModel from "../../../Models/YearsModel";
-import spendingsService from "../../../Services/SpendingsService";
 
 // Types
 interface DataType {
@@ -130,7 +127,8 @@ export function SpendingTable(): JSX.Element {
         "month",
         "==",
         selectedMonth ? Number(selectedMonth) : 0
-      )
+      ),
+      orderBy("date", "desc")
     );
   }, [selectedYear, selectedMonth]);
 
@@ -145,7 +143,7 @@ export function SpendingTable(): JSX.Element {
     );
   }, []);
 
-  const [datesSnapshot, datesLoading] =
+  const [datesSnapshot] =
     useCollection(datesQuery);
   const [spendingSnapshot, loading] =
     useCollection(spendingQuery);
@@ -167,14 +165,20 @@ export function SpendingTable(): JSX.Element {
             dataIndex: "category",
             key: "category",
             width: isMobile ? "20%" : "15%",
-            align: "center",
+            align: "right",
+            render: (category: string) => (
+              <span>
+                {getCategoryEmoji(category)}{" "}
+                {category}
+              </span>
+            ),
           },
           {
             title: "תת-קטגוריה",
             dataIndex: "subCategory",
             key: "subCategory",
             width: isMobile ? "20%" : "15%",
-            align: "center",
+            align: "right",
           },
           {
             title: "סכום",
@@ -195,7 +199,7 @@ export function SpendingTable(): JSX.Element {
             key: "note",
             dataIndex: "note",
             width: "25%",
-            align: "center",
+            align: "right",
           },
           {
             title: "פעולות",
@@ -216,8 +220,6 @@ export function SpendingTable(): JSX.Element {
                 <DeleteOutlined
                   className="action-icon delete"
                   onClick={() => {
-                    console.log(record.id);
-
                     handleDelete(record);
                   }}
                 />
@@ -277,6 +279,49 @@ export function SpendingTable(): JSX.Element {
     }
   }, [datesSnapshot]);
 
+  useEffect(() => {
+    if (!selectedYear && dates) {
+      const yearsArray = dates.years;
+      if (yearsArray && yearsArray.length > 0) {
+        const currentDate = new Date();
+        const currentYear = currentDate
+          .getFullYear()
+          .toString();
+        const currentMonth = (
+          currentDate.getMonth() + 1
+        )
+          .toString()
+          .padStart(2, "0");
+
+        // Find the most recent year if current year is not available
+        const availableYear = yearsArray.find(
+          (y) => y.year === currentYear
+        )
+          ? currentYear
+          : yearsArray[0].year;
+
+        setSelectedYear(availableYear);
+        const yearData = yearsArray.find(
+          (y) => y.year === availableYear
+        );
+        setDatesYear(yearData);
+
+        // Set month if available, otherwise use the most recent month
+        if (yearData) {
+          const monthExists =
+            yearData.months.some(
+              (m) => m.month === currentMonth
+            );
+          setSelectedMonth(
+            monthExists
+              ? currentMonth
+              : yearData.months[0].month
+          );
+        }
+      }
+    }
+  }, [dates, selectedYear]);
+
   // Handlers
   const handleYearChange = (value: string) => {
     setSelectedYear(value);
@@ -292,7 +337,7 @@ export function SpendingTable(): JSX.Element {
     record: DataType
   ) => {
     try {
-      AntModal.confirm({
+      Modal.confirm({
         title:
           "האם אתה בטוח שברצונך למחוק הוצאה זו?",
         content: `${record.category} - ${record.subCategory} - ${record.sum} ₪`,
@@ -346,32 +391,26 @@ export function SpendingTable(): JSX.Element {
     updatedSpending: SpendingModel
   ) => {
     setSpendings((prev) => {
-      if (
-        updatedSpending.month === selectedMonth &&
-        updatedSpending.year === selectedYear
-      ) {
-        const newSpendings = prev.map(
-          (spending) =>
-            spending.id === updatedSpending.id
-              ? updatedSpending
-              : spending
-        );
-        return newSpendings.sort((a, b) => {
-          if (a.date < b.date) return -1;
-          if (a.date > b.date) return 1;
-          return 0;
-        });
-      } else {
-        return prev.filter(
-          (spending) =>
-            spending.id !== updatedSpending.id
-        );
-      }
+      const newSpendings = prev.map((spending) =>
+        spending.id === updatedSpending.id
+          ? updatedSpending
+          : spending
+      );
+      return newSpendings.sort((a, b) => {
+        if (a.date < b.date) return -1;
+        if (a.date > b.date) return 1;
+        return 0;
+      });
     });
   };
 
   return (
     <div className="SpendingTable">
+      <div className="table-title">
+        <h1>טבלת הוצאות</h1>
+        <p>עקוב אחר ההוצאות שלך</p>
+      </div>
+
       <div className="table-header">
         <div className="add-spending">
           <button
@@ -401,29 +440,6 @@ export function SpendingTable(): JSX.Element {
         <div className="filter-month">
           <div className="input-group">
             <select
-              value={selectedYear}
-              className="input"
-              onChange={(e) =>
-                handleYearChange(e.target.value)
-              }
-            >
-              <option value="" disabled>
-                בחר שנה
-              </option>
-              {dates?.years.map((year) => (
-                <option
-                  key={year.year}
-                  value={year.year}
-                >
-                  {year.year}
-                </option>
-              ))}
-            </select>
-            <label className="label">שנה</label>
-          </div>
-
-          <div className="input-group">
-            <select
               value={selectedMonth}
               className="input"
               onChange={(e) =>
@@ -443,6 +459,28 @@ export function SpendingTable(): JSX.Element {
               ))}
             </select>
             <label className="label">חודש</label>
+          </div>
+          <div className="input-group">
+            <select
+              value={selectedYear}
+              className="input"
+              onChange={(e) =>
+                handleYearChange(e.target.value)
+              }
+            >
+              <option value="" disabled>
+                בחר שנה
+              </option>
+              {dates?.years.map((year) => (
+                <option
+                  key={year.year}
+                  value={year.year}
+                >
+                  {year.year}
+                </option>
+              ))}
+            </select>
+            <label className="label">שנה</label>
           </div>
         </div>
       </div>

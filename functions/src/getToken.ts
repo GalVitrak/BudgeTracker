@@ -5,11 +5,6 @@ import cyber from "./cyber";
 const getToken = functions.https.onCall(
   async (data, context) => {
     const uid = data.uid;
-    console.log("test");
-
-    console.log(uid);
-    console.log("test");
-
     const snapshot = await db
       .collection("users")
       .where("uid", "==", uid)
@@ -23,6 +18,7 @@ const getToken = functions.https.onCall(
       );
     }
     snapshot.forEach((doc) => {
+      console.log(doc.data());
       token = cyber.getNewToken(doc.data());
     });
     return token;

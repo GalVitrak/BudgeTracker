@@ -3,7 +3,7 @@
   width: 100%;
   box-sizing: border-box;
   display: grid;
-  grid-template-rows: 5% 90% 5%;
+  grid-template-rows: max-content minmax(0, 1fr) max-content;
 }
 
 .Layout > header {
@@ -25,4 +25,37 @@
   height: 100%;
   overflow: hidden;
   position: static;
+}
+
+@media (max-width: 768px) {
+  .Layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    position: absolute;
+  }
+
+  .Layout > header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  .Layout > main {
+    height: max-content;
+    padding-top: 30px;
+    padding-bottom: 40px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+
+  .Layout > footer {
+    position: absolute;
+    bottom: 0;
+    height: min-content;
+  }
 }

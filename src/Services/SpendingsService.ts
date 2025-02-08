@@ -31,6 +31,41 @@ class SpendingsService {
     return spending.id || "empty :(";
   }
 
+  public async updateSpending(
+    spending: SpendingModel
+  ): Promise<void> {
+    const updateSpending = httpsCallable(
+      functions,
+      "updateSpending"
+    );
+
+    const date = new Date(
+      spending.date.split(".").reverse().join("-")
+    );
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+
+    await updateSpending({
+      spendingId: spending.id,
+      category: spending.category,
+      subCategory: spending.subCategory,
+      date: date,
+      sum: spending.sum,
+      note: spending.note,
+      year: year,
+      month: month,
+    })
+      .then(() => {
+        notifyService.success(
+          "ההוצאה עודכנה בהצלחה"
+        );
+      })
+      .catch((error) => {
+        notifyService.error(error);
+        throw error;
+      });
+  }
+
   public async addCategory(
     category: CategoryModel
   ): Promise<string> {
@@ -61,7 +96,13 @@ class SpendingsService {
       "addSubCategory"
     );
 
-    await addSubCategory(category)
+    await addSubCategory({
+      categoryId: category.id,
+      newSubCategory:
+        category.subCategories[
+          category.subCategories.length - 1
+        ],
+    })
       .then(() => {
         notifyService.success(
           "תת קטגוריה נוספה בהצלחה"

@@ -3,9 +3,6 @@ class UserModel {
   public uid: string;
   public email: string;
   public password: string;
-  public approved: boolean;
-  public averageEarning?: number;
-  public averageSpending?: number;
   public role?: string;
 
   public constructor(
@@ -18,7 +15,6 @@ class UserModel {
     this.uid = uid;
     this.email = email;
     this.password = password;
-    this.approved = false;
     this.id = id;
     this.role = role;
   }
@@ -32,6 +28,17 @@ class UserModel {
       value:
         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
       message: "כתובת דוא''ל אינה תקינה",
+    },
+  };
+
+  public static passwordVerification = {
+    required: {
+      value: true,
+      message: "חסרה סיסמה",
+    },
+    minLength: {
+      value: 6,
+      message: "הסיסמה חייבת להכיל לפחות 6 תווים",
     },
   };
 }

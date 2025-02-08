@@ -13,12 +13,12 @@ function Home(): JSX.Element {
     <div className="Home">
       <section className="hero-section">
         <div className="hero-content">
-          <h1>נהל את ההוצאות שלך בקלות</h1>
+          <h1>נהל את ההוצאות שלך בקלות עם באג'טראקר</h1>
           <p>
             פלטפורמה חכמה לניהול הוצאות אישיות,
             מעקב אחר תקציב וקבלת תובנות פיננסיות
           </p>
-          <Link to="/register">
+          <Link to="/login">
             <Button
               type="primary"
               size="large"
@@ -31,7 +31,7 @@ function Home(): JSX.Element {
       </section>
 
       <section className="features-section">
-        <h2>למה להשתמש באפליקציה שלנו?</h2>
+        <h2>למה להשתמש בפלטפורמה שלנו?</h2>
         <Row gutter={[32, 32]}>
           <Col xs={24} sm={12} lg={6}>
             <div className="feature-card">
@@ -68,7 +68,7 @@ function Home(): JSX.Element {
               <CheckCircleOutlined className="feature-icon" />
               <h3>דוחות תקופתיים</h3>
               <p>
-                קבל דוחות חודשיים ושנתיים מפורטים
+                קבל דוחות חודשיים מפורטים
                 על המצב הפיננסי שלך
               </p>
             </div>
@@ -92,7 +92,7 @@ function Home(): JSX.Element {
           <div className="step">
             <div className="step-number">3</div>
             <h3>קבל תובנות</h3>
-            <p>צפה בניתוחים וקבל המלצות</p>
+            <p>צפה בניתוחים פיננסיים</p>
           </div>
         </div>
       </section>

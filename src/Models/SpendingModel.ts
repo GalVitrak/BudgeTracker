@@ -4,8 +4,8 @@ class SpendingModel {
   category: string;
   subCategory: string;
   date: string;
-  year: string;
-  month: string;
+  year: string | number;
+  month: string | number;
   sum: number;
   note: string;
 

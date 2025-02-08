@@ -1,11 +1,10 @@
 import * as jwt from "jsonwebtoken";
-import * as crypto from "crypto-js";
-const jwtSecretKey = "ChicknezSpendingCheck";
+const jwtSecretKey = "ChicknezBudgeTracker";
 
 // // a function to generate a new Token
 function getNewToken(user: {}): string {
   const container = { user };
-  const options = { expiresIn: "120h" };
+  const options = { expiresIn: 432000 }; // 120 hours in seconds
   const token = jwt.sign(
     container,
     jwtSecretKey,
@@ -43,18 +42,6 @@ function getNewToken(user: {}): string {
 
 // //for sms
 
-const salt = "TommyChicknez";
-
-// // a function to encrypt passwords
-function hash(plainText: string): string | null {
-  if (!plainText) return null;
-  // Hash with salt:
-  const hashedText = crypto
-    .HmacSHA256(plainText, salt)
-    .toString();
-  return hashedText;
-}
-
 // // a function to verify that the user's role is Admin
 // // async function verifyAdmin(request: Request): Promise<boolean> {
 // //   const isLoggedIn = await verifyToken(request);
@@ -73,6 +60,5 @@ function hash(plainText: string): string | null {
 export default {
   getNewToken,
   //   //   verifyToken,
-  hash,
   //   //   validateOTP,
 };

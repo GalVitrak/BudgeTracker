@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import notifyService from "./NotifyService";
 import CredentialsModel from "../Models/CredentialsModel";
@@ -23,6 +24,85 @@ class AuthService {
     functions,
     "getToken"
   );
+
+  // הרשמת משתמש חדש למערכת
+  public async register(
+    user: UserModel
+  ): Promise<boolean> {
+    const register = httpsCallable(
+      functions,
+      "register"
+    );
+
+    let isLoggedIn = false;
+    // יצירת משתמש חדש ב-Firebase Auth
+    await createUserWithEmailAndPassword(
+      auth,
+      user.email,
+      user.password
+    )
+      .then(async (userCredentials) => {
+        if (!userCredentials.user) {
+          throw new Error("שגיאה ביצירת משתמש");
+        } else {
+          // Send verification email
+          await sendEmailVerification(
+            userCredentials.user
+          );
+          user.uid = userCredentials.user.uid;
+          await register(user);
+          notifyService.success(
+            "נשלח אליך מייל לאימות החשבון. אנא אמת את חשבונך לפני ההתחברות."
+          );
+          isLoggedIn = false; // Don't auto-login after registration
+        }
+      })
+      .catch((error: any) => {
+        notifyService.error({
+          code: error.code,
+          message: error.message,
+        });
+      });
+    return isLoggedIn;
+  }
+
+  // התחברות משתמש קיים
+  public async login(
+    credentials: CredentialsModel
+  ): Promise<boolean> {
+    let isLoggedIn = false;
+    try {
+      const userCredentials =
+        await signInWithEmailAndPassword(
+          auth,
+          credentials.email,
+          credentials.password
+        );
+
+      if (!userCredentials.user) {
+        throw new Error("שגיאה בהתחברות");
+      }
+
+      if (!userCredentials.user.emailVerified) {
+        throw new Error(
+          "auth/email-not-verified"
+        );
+      }
+
+      await this.handleTokenAndLogin(
+        userCredentials.user.uid,
+        credentials.email
+      );
+      isLoggedIn = true;
+    } catch (error: any) {
+      notifyService.error({
+        code: error.code || error.message,
+        message: error.message,
+      });
+      throw error;
+    }
+    return isLoggedIn;
+  }
 
   // פונקציה פרטית לטיפול בטוקן והתחברות
   private async handleTokenAndLogin(
@@ -52,82 +132,50 @@ class AuthService {
     }
   }
 
-  // הרשמת משתמש חדש למערכת
-  public async register(
-    user: UserModel
-  ): Promise<boolean> {
-    const register = httpsCallable(
-      functions,
-      "register"
-    );
-
+  // Send password reset email
+  public async sendPasswordResetEmail(
+    email: string
+  ): Promise<void> {
     try {
-      // יצירת משתמש חדש ב-Firebase Auth
-      const userCredential =
-        await createUserWithEmailAndPassword(
-          auth,
-          user.email,
-          user.password
-        );
-
-      if (!userCredential.user) {
-        throw new Error("שגיאה ביצירת משתמש");
-      }
-
-      // הגדרת מזהה המשתמש
-      user.id = userCredential.user.uid;
-
-      // רישום המשתמש בשרת
-      await register(user);
-
-      // שליחת אימות מייל
-      await sendEmailVerification(
-        userCredential.user
+      await sendPasswordResetEmail(auth, email);
+      notifyService.success(
+        "נשלח אליך מייל לאיפוס הסיסמה"
       );
-
-      // טיפול בטוקן והתחברות
-      await this.handleTokenAndLogin(
-        userCredential.user.uid,
-        user.email
-      );
-
-      return true;
-    } catch (error: any) {
-      notifyService.error(error.message);
-      return false;
-    }
-  }
-
-  // התחברות משתמש קיים
-  public async login(
-    credentials: CredentialsModel
-  ): Promise<boolean> {
-    try {
-      // התחברות באמצעות Firebase Auth
-      const userCredential =
-        await signInWithEmailAndPassword(
-          auth,
-          credentials.email,
-          credentials.password
-        );
-
-      if (!userCredential.user) {
-        throw new Error("שגיאה בהתחברות");
-      }
-
-      // טיפול בטוקן והתחברות
-      await this.handleTokenAndLogin(
-        userCredential.user.uid,
-        credentials.email
-      );
-
-      return true;
     } catch (error: any) {
       notifyService.error({
         code: error.code,
         message: error.message,
       });
-      return false;
+      throw error;
+    }
+  }
+
+  // Resend verification email
+  public async resendVerificationEmail(
+    email: string,
+    password: string
+  ): Promise<void> {
+    try {
+      const userCredentials =
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+      if (userCredentials.user) {
+        await sendEmailVerification(
+          userCredentials.user
+        );
+        notifyService.success(
+          "מייל אימות נשלח בהצלחה"
+        );
+      }
+    } catch (error: any) {
+      notifyService.error({
+        code: error.code,
+        message: error.message,
+      });
+      throw error;
     }
   }
 }
