@@ -113,7 +113,10 @@ function Dashboard(): JSX.Element {
           );
         });
 
-      setRecentSpendings(extractedSpendings);
+      // Only update if there's no new spending being added
+      if (!newSpending) {
+        setRecentSpendings(extractedSpendings);
+      }
 
       if (extractedSpendings.length > 0) {
         const total = extractedSpendings.reduce(
@@ -139,7 +142,7 @@ function Dashboard(): JSX.Element {
         setLowestSpending(0);
       }
     }
-  }, [spendingSnapshot]);
+  }, [spendingSnapshot, error, newSpending]);
 
   useEffect(() => {
     if (newSpending) {

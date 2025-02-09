@@ -343,7 +343,10 @@ export function SpendingTable(): JSX.Element {
         content: `${record.category} - ${record.subCategory} - ${record.sum} ₪`,
         okText: "מחק",
         cancelText: "בטל",
+        centered: true,
         okButtonProps: { danger: true },
+        width: 400,
+        className: "delete-confirmation-modal",
         async onOk() {
           await spendingsService.deleteSpending(
             record.id
@@ -411,188 +414,200 @@ export function SpendingTable(): JSX.Element {
         <p>עקוב אחר ההוצאות שלך</p>
       </div>
 
-      <div className="table-header">
-        <div className="add-spending">
-          <button
-            className="modern-button"
-            onClick={() => setAddModalOpen(true)}
-          >
-            הוספת הוצאה
-          </button>
-          <button
-            className="modern-button"
-            onClick={() =>
-              setAddCategoryModalOpen(true)
-            }
-          >
-            הוספת קטגוריה
-          </button>
-          <button
-            className="modern-button"
-            onClick={() =>
-              setAddSubCategoryModalOpen(true)
-            }
-          >
-            הוספת תת-קטגוריה
-          </button>
-        </div>
-
-        <div className="filter-month">
-          <div className="input-group">
-            <select
-              value={selectedMonth}
-              className="input"
-              onChange={(e) =>
-                setSelectedMonth(e.target.value)
+      <div className="table-container">
+        <div className="table-header">
+          <div className="add-spending">
+            <button
+              className="modern-button"
+              onClick={() =>
+                setAddModalOpen(true)
               }
             >
-              <option value="" disabled>
-                בחר חודש
-              </option>
-              {datesYear?.months.map((month) => (
-                <option
-                  key={month.month}
-                  value={month.month}
-                >
-                  {month.display}
-                </option>
-              ))}
-            </select>
-            <label className="label">חודש</label>
-          </div>
-          <div className="input-group">
-            <select
-              value={selectedYear}
-              className="input"
-              onChange={(e) =>
-                handleYearChange(e.target.value)
+              הוספת הוצאה
+            </button>
+            <button
+              className="modern-button"
+              onClick={() =>
+                setAddCategoryModalOpen(true)
               }
             >
-              <option value="" disabled>
-                בחר שנה
-              </option>
-              {dates?.years.map((year) => (
-                <option
-                  key={year.year}
-                  value={year.year}
-                >
-                  {year.year}
+              הוספת קטגוריה
+            </button>
+            <button
+              className="modern-button"
+              onClick={() =>
+                setAddSubCategoryModalOpen(true)
+              }
+            >
+              הוספת תת-קטגוריה
+            </button>
+          </div>
+
+          <div className="filter-month">
+            <div className="input-group">
+              <select
+                value={selectedMonth}
+                className="input"
+                onChange={(e) =>
+                  setSelectedMonth(e.target.value)
+                }
+              >
+                <option value="" disabled>
+                  בחר חודש
                 </option>
-              ))}
-            </select>
-            <label className="label">שנה</label>
+                {datesYear?.months.map(
+                  (month) => (
+                    <option
+                      key={month.month}
+                      value={month.month}
+                    >
+                      {month.display}
+                    </option>
+                  )
+                )}
+              </select>
+              <label className="label">
+                חודש
+              </label>
+            </div>
+            <div className="input-group">
+              <select
+                value={selectedYear}
+                className="input"
+                onChange={(e) =>
+                  handleYearChange(e.target.value)
+                }
+              >
+                <option value="" disabled>
+                  בחר שנה
+                </option>
+                {dates?.years.map((year) => (
+                  <option
+                    key={year.year}
+                    value={year.year}
+                  >
+                    {year.year}
+                  </option>
+                ))}
+              </select>
+              <label className="label">שנה</label>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="table-content">
-        {selectedMonth && selectedYear ? (
-          <Table<DataType>
-            loading={loading}
-            bordered
-            sticky
-            expandable={
-              isMobile
-                ? {
-                    expandedRowRender: (
-                      record
-                    ) => (
-                      <div className="expanded-row">
-                        <div className="expanded-item">
-                          <strong>תאריך:</strong>{" "}
-                          {record.date}
+        <div className="table-content">
+          {selectedMonth && selectedYear ? (
+            <Table<DataType>
+              loading={loading}
+              bordered
+              sticky
+              expandable={
+                isMobile
+                  ? {
+                      expandedRowRender: (
+                        record
+                      ) => (
+                        <div className="expanded-row">
+                          <div className="expanded-item">
+                            <strong>
+                              תאריך:
+                            </strong>{" "}
+                            {record.date}
+                          </div>
+                          <div className="expanded-item">
+                            <strong>
+                              קטגוריה:
+                            </strong>{" "}
+                            {record.category}
+                          </div>
+                          <div className="expanded-item">
+                            <strong>
+                              תת-קטגוריה:
+                            </strong>{" "}
+                            {record.subCategory}
+                          </div>
+                          <div className="expanded-item">
+                            <strong>סכום:</strong>{" "}
+                            {Number(
+                              record.sum
+                            ).toFixed(2)}{" "}
+                            ₪
+                          </div>
+                          <div className="expanded-item">
+                            <strong>הערה:</strong>{" "}
+                            {record.note}
+                          </div>
+                          <div className="expanded-item">
+                            <Space className="action-buttons">
+                              <EditOutlined
+                                className="action-icon edit"
+                                onClick={() =>
+                                  handleEdit(
+                                    record
+                                  )
+                                }
+                              />
+                              <DeleteOutlined
+                                className="action-icon delete"
+                                onClick={() =>
+                                  handleDelete(
+                                    record
+                                  )
+                                }
+                              />
+                            </Space>
+                          </div>
                         </div>
-                        <div className="expanded-item">
-                          <strong>
-                            קטגוריה:
-                          </strong>{" "}
-                          {record.category}
-                        </div>
-                        <div className="expanded-item">
-                          <strong>
-                            תת-קטגוריה:
-                          </strong>{" "}
-                          {record.subCategory}
-                        </div>
-                        <div className="expanded-item">
-                          <strong>סכום:</strong>{" "}
-                          {Number(
-                            record.sum
-                          ).toFixed(2)}{" "}
-                          ₪
-                        </div>
-                        <div className="expanded-item">
-                          <strong>הערה:</strong>{" "}
-                          {record.note}
-                        </div>
-                        <div className="expanded-item">
-                          <Space className="action-buttons">
-                            <EditOutlined
-                              className="action-icon edit"
-                              onClick={() =>
-                                handleEdit(record)
-                              }
-                            />
-                            <DeleteOutlined
-                              className="action-icon delete"
-                              onClick={() =>
-                                handleDelete(
-                                  record
-                                )
-                              }
-                            />
-                          </Space>
-                        </div>
-                      </div>
-                    ),
-                    expandedRowKeys,
-                    onExpand: (
-                      expanded,
-                      record
-                    ) => {
-                      setExpandedRowKeys(
-                        expanded
-                          ? [record.id]
-                          : []
-                      );
-                    },
-                  }
-                : undefined
-            }
-            pagination={{
-              responsive: true,
-              position: ["topCenter"],
-              hideOnSinglePage: true,
-            }}
-            footer={() => (
-              <div className="table-footer">
-                סה"כ הוצאות:{" "}
-                <span className="total-amount">
-                  {spendings
-                    .reduce(
-                      (sum, spending) =>
-                        sum +
-                        Number(spending.sum),
-                      0
-                    )
-                    .toFixed(2)}{" "}
-                  ₪
-                </span>
-              </div>
-            )}
-            columns={columns}
-            dataSource={spendings}
-            rowKey={(record) => record.id}
-          />
-        ) : (
-          <div className="empty-state">
-            <h2>
-              {selectedYear === ""
-                ? "אנא בחר שנה"
-                : "אנא בחר חודש"}
-            </h2>
-          </div>
-        )}
+                      ),
+                      expandedRowKeys,
+                      onExpand: (
+                        expanded,
+                        record
+                      ) => {
+                        setExpandedRowKeys(
+                          expanded
+                            ? [record.id]
+                            : []
+                        );
+                      },
+                    }
+                  : undefined
+              }
+              pagination={{
+                responsive: true,
+                position: ["topCenter"],
+                hideOnSinglePage: true,
+              }}
+              footer={() => (
+                <div className="table-footer">
+                  סה"כ הוצאות:{" "}
+                  <span className="total-amount">
+                    {spendings
+                      .reduce(
+                        (sum, spending) =>
+                          sum +
+                          Number(spending.sum),
+                        0
+                      )
+                      .toFixed(2)}{" "}
+                    ₪
+                  </span>
+                </div>
+              )}
+              columns={columns}
+              dataSource={spendings}
+              rowKey={(record) => record.id}
+            />
+          ) : (
+            <div className="empty-state">
+              <h2>
+                {selectedYear === ""
+                  ? "אנא בחר שנה"
+                  : "אנא בחר חודש"}
+              </h2>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modals */}
