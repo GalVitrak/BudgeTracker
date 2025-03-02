@@ -167,27 +167,41 @@ button.modern-button:disabled {
 .login-links {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 24px;
-  text-align: center;
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
 }
 
 .login-links span {
-  color: #666;
+  color: #1890ff;
   cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 8px;
-  font-size: 0.9em;
+  transition: all 0.3s;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: #f0f7ff;
+  text-align: center;
+  font-weight: 500;
+  border: 1px solid #e6f4ff;
 }
 
 .login-links span:hover {
-  color: #6b8cce;
+  background-color: #e6f4ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(24, 144, 255, 0.1);
 }
 
 /* Modal Styles */
 .modern-modal .ant-modal-content {
   border-radius: 20px;
   overflow: hidden;
+  width: auto;
+  min-width: min(90vw, 600px);
+  max-width: 90vw;
+}
+
+.modern-modal {
+  width: auto !important;
+  max-width: 90vw;
 }
 
 .modern-modal .ant-modal-header {
@@ -225,6 +239,49 @@ button.modern-button:disabled {
 
 .modern-modal .ant-btn-primary:hover {
   background: #5a7ab8;
+}
+
+/* Terms Modal Styles */
+.terms-modal .ant-modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.terms-content {
+  padding: 20px 0;
+}
+
+.terms-content h3 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 1.2em;
+  text-align: center;
+}
+
+.terms-content p {
+  margin-bottom: 20px;
+  line-height: 1.6;
+  color: #666;
+}
+
+.terms-content ol {
+  margin: 20px 0;
+  padding-right: 20px;
+}
+
+.terms-content li {
+  margin-bottom: 15px;
+  line-height: 1.5;
+  color: #666;
+}
+
+.terms-content .terms-footer {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
 }
 
 @media (max-width: 768px) {
@@ -292,11 +349,44 @@ button.modern-button:disabled {
   }
 
   .login-links {
-    margin: 15px 0;
+    gap: 8px;
+    margin-top: 12px;
   }
 
   .login-links span {
-    padding: 8px;
-    font-size: 0.9em;
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+
+  .modern-modal .ant-modal-content {
+    min-width: 95vw;
+  }
+
+  .modern-modal {
+    max-width: 95vw;
+  }
+
+  .terms-content {
+    padding: 15px 0;
+  }
+
+  .terms-content h3 {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+  }
+
+  .terms-content p,
+  .terms-content li {
+    font-size: 0.95em;
+    margin-bottom: 12px;
+  }
+
+  .terms-content ol {
+    padding-right: 15px;
+  }
+
+  .terms-content .terms-footer {
+    margin-top: 15px;
+    padding-top: 15px;
   }
 }

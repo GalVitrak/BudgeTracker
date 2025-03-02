@@ -11,11 +11,17 @@ import authService from "../../../Services/AuthService";
 import notifyService from "../../../Services/NotifyService";
 import "./Register.css";
 
+interface RegisterProps {
+  modalStateChanger: (isOpen: boolean) => void;
+}
+
 /**
  * Register component that provides new user registration functionality
  * @returns The registration form component
  */
-function Register(): JSX.Element {
+function Register({
+  modalStateChanger,
+}: RegisterProps): JSX.Element {
   const navigate = useNavigate();
   const { register, handleSubmit } =
     useForm<UserModel>();
@@ -36,6 +42,8 @@ function Register(): JSX.Element {
         .then((isLoggedIn) => {
           if (isLoggedIn) {
             navigate("/dashboard");
+          } else {
+            modalStateChanger(false); // Close modal after successful registration
           }
         })
         .catch((error) => {

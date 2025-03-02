@@ -21,6 +21,13 @@ const updateSpending = functions.https.onCall(
       );
     }
 
+    if (!category || !subCategory) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Category and subcategory are required"
+      );
+    }
+
     try {
       const spendingRef = db
         .collection("spendings")
@@ -34,15 +41,22 @@ const updateSpending = functions.https.onCall(
         );
       }
 
-      await spendingRef.update({
+      // Create update object with required fields
+      const updateData = {
         category,
         subCategory,
         date: new Date(date),
         sum,
-        note: note || "",
         year,
         month,
-      });
+      };
+
+      // Only add note if it exists
+      if (note !== undefined) {
+        Object.assign(updateData, { note });
+      }
+
+      await spendingRef.update(updateData);
 
       return { success: true };
     } catch (error) {

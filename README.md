@@ -1,50 +1,72 @@
-# React + TypeScript + Vite
+# [BudgeTracker.cash](https://budgetracker.cash/) - Personal Finance Tracker 💰
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, user-friendly application for tracking personal expenses, managing budgets, and visualizing spending patterns. Built with React and Firebase, SpendingCheck helps you take control of your finances with intuitive category management and detailed budget analysis.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 📊 Comprehensive Budget Visualization
 
-## Expanding the ESLint configuration
+- Interactive bar charts showing expenses vs. budget
+- Category-wise breakdown of spending
+- Subcategory tracking for detailed expense management
+- Real-time savings tracking and goals
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### 💳 Expense Management
 
-- Configure the top-level `parserOptions` property like this:
+- Easy expense categorization
+- Support for main categories and subcategories
+- Flexible date filtering by month and year
+- Quick expense entry and modification
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+### 📱 Responsive Design
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+- Fully responsive interface
+- Optimized for both desktop and mobile devices
+- Touch-friendly controls
+- Adaptive chart visualization
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+### 🔒 Secure and Private
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+- Firebase Authentication
+- Personal data protection
+- Secure cloud storage
+- User-specific data isolation
+
+## 🛠️ Built With
+
+- [React](https://reactjs.org/) - Frontend framework
+- [Firebase](https://firebase.google.com/) - Backend and authentication
+- [Recharts](https://recharts.org/) - Chart visualization
+- [Ant Design](https://ant.design/) - UI components
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Inspired by the need for better personal finance management tools
+- Built with modern web technologies and best practices
+
+## 📬 Contact
+
+Gal Vitrak - [LinkedIn](https://www.linkedin.com/in/gal-vitrak/) - [Email](galvit25@gmail.com)
+
+Project Link: [https://github.com/GalVitrak/BudgeTracker](https://github.com/GalVitrak/BudgeTracker)
+
+## ⚠️ Disclaimer
+
+This application is provided "as is" without any warranties of any kind, either express or implied. While we strive to maintain accurate financial calculations and secure data handling:
+
+- The application is for personal finance tracking and budgeting purposes only
+- Users are responsible for verifying all financial calculations and data accuracy
+- This is not a substitute for professional financial advice
+- We are not responsible for any financial decisions made based on the application's data
+- Always backup your financial data and verify important calculations
+- Security of your data depends on proper account protection and following security best practices
+
+By using this application, you acknowledge and agree to these terms.
+
+---
+
+Made with ❤️ for better financial management

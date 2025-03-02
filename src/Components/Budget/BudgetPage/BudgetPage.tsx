@@ -19,6 +19,7 @@ import {
 } from "@ant-design/icons";
 import {
   collection,
+  or,
   query,
   where,
 } from "firebase/firestore";
@@ -157,7 +158,10 @@ export function BudgetPage(): JSX.Element {
   );
   const q = query(
     categoriesRef,
-    where("uid", "in", ["allUsers", uid])
+    or(
+      where("uid", "array-contains", uid),
+      where("uid", "array-contains", "allUsers")
+    )
   );
   const [snapshot, loading] = useCollection(q);
 
@@ -654,11 +658,13 @@ export function BudgetPage(): JSX.Element {
             onClick={handleSubmit}
             disabled={
               getBudgetAllocationPercentage() >
-              100
+                100 || isSubmitting
             }
             className="modern-button"
           >
-            שמור תקציב
+            {isSubmitting
+              ? "שומר..."
+              : "שמור תקציב"}
           </button>
         </div>
       </div>

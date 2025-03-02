@@ -1,2 +1,55 @@
 .AddSpending {
 }
+
+.payment-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1rem 0;
+  padding: 0 0.5rem;
+  direction: rtl;
+  width: 100%;
+  gap: 16px;
+}
+
+.payment-toggle label {
+  font-size: 1rem;
+  color: #333;
+  margin-right: auto;
+}
+
+/* Ant Design Switch customization */
+.ant-switch {
+  background-color: rgba(0, 0, 0, 0.25);
+  margin-right: 0;
+}
+
+.ant-switch-checked {
+  background-color: #1890ff;
+}
+
+.ant-switch:focus {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Payment inputs styling */
+.input-group select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  padding-right: 2.5rem;
+}
+
+.input-group select.input:focus {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231890ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+@media (max-width: 768px) {
+  .payment-toggle {
+    margin: 0.5rem 0;
+    padding: 0;
+    margin-bottom: 16px;
+  }
+}

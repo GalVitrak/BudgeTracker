@@ -8,6 +8,7 @@ import NotFound from "../NotFound/NotFound";
 import "./Routing.css";
 import { SpendingTable } from "../../Spending/SpendingTable/SpendingTable";
 import BudgetGraph from "../../Budget/BudgetGraph/BudgetGraph";
+import { CategoriesManagement } from "../../Categories/CategoriesManagement/CategoriesManagement";
 import { authStore } from "../../../Redux/AuthState";
 import { useEffect, useState } from "react";
 
@@ -56,6 +57,14 @@ function Routing(): JSX.Element {
           element={
             <ProtectedRoute>
               <SpendingTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/categories"
+          element={
+            <ProtectedRoute>
+              <CategoriesManagement />
             </ProtectedRoute>
           }
         />

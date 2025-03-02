@@ -7,6 +7,9 @@ import deleteSpending from "./deleteSpending";
 import getToken from "./getToken";
 import setBudget from "./setBudget";
 import updateSpending from "./updateSpending";
+import updateCategory from "./updateCategory";
+import deleteCategory from "./deleteCategory";
+import deleteSubCategory from "./deleteSubCategory";
 
 admin.initializeApp();
 
@@ -20,3 +23,6 @@ exports.addSubCategory = addSubCategory;
 exports.deleteSpending = deleteSpending;
 exports.setBudget = setBudget;
 exports.updateSpending = updateSpending;
+exports.updateCategory = updateCategory;
+exports.deleteCategory = deleteCategory;
+exports.deleteSubCategory = deleteSubCategory;

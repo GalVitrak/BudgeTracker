@@ -10,6 +10,8 @@ export function getCategoryEmoji(
     בית: "🏠",
     בריאות: "⚕️",
     לימודים: "📚",
+    "חיות מחמד": "🐾",
+    מנויים: "📺",
     אחר: "📌",
   };
   return emojiMap[category] || "📌";

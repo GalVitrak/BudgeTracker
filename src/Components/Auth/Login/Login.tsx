@@ -37,6 +37,12 @@ function Login(): JSX.Element {
   ] = useState({ email: "", password: "" });
   const [loginAttempts, setLoginAttempts] =
     useState<{ [key: string]: number }>({});
+  const [termsModalOpen, setTermsModalOpen] =
+    useState(false);
+  const [
+    pendingCredentials,
+    setPendingCredentials,
+  ] = useState<CredentialsModel | null>(null);
 
   const { register, handleSubmit, getValues } =
     useForm<CredentialsModel>();
@@ -52,17 +58,10 @@ function Login(): JSX.Element {
     [loginAttempts]
   );
 
-  /**
-   * Handles the login form submission
-   * @param credentials - The user's login credentials
-   */
-  async function send(
+  const proceedWithLogin = async (
     credentials: CredentialsModel
-  ) {
-    if (isLoading) return;
-
+  ) => {
     try {
-      setIsLoading(true);
       await authService
         .login(credentials)
         .then((proceed: boolean) => {
@@ -119,6 +118,33 @@ function Login(): JSX.Element {
         });
     } finally {
       setIsLoading(false);
+      setPendingCredentials(null);
+    }
+  };
+
+  /**
+   * Handles the login form submission
+   * @param credentials - The user's login credentials
+   */
+  async function send(
+    credentials: CredentialsModel
+  ) {
+    if (isLoading) return;
+
+    try {
+      setIsLoading(true);
+      // First verify credentials without completing login
+      const isValid =
+        await authService.verifyCredentials(
+          credentials
+        );
+      if (isValid) {
+        setPendingCredentials(credentials);
+        setTermsModalOpen(true);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      notifyService.error(error as any);
     }
   }
 
@@ -154,6 +180,19 @@ function Login(): JSX.Element {
     } catch (error) {
       // Error is already handled by the service
     }
+  };
+
+  const handleTermsAccept = async () => {
+    setTermsModalOpen(false);
+    if (pendingCredentials) {
+      await proceedWithLogin(pendingCredentials);
+    }
+  };
+
+  const handleTermsDecline = () => {
+    setTermsModalOpen(false);
+    setPendingCredentials(null);
+    setIsLoading(false);
   };
 
   return (
@@ -220,9 +259,59 @@ function Login(): JSX.Element {
         </div>
       </div>
 
+      {/* Terms and Conditions Modal */}
+      <Modal
+        title="תנאים והגבלות"
+        open={termsModalOpen}
+        onOk={handleTermsAccept}
+        onCancel={handleTermsDecline}
+        okText="מסכים/ה"
+        cancelText="לא מסכים/ה"
+        className="modern-modal terms-modal"
+        centered
+        closable={false}
+        maskClosable={false}
+      >
+        <div className="terms-content">
+          <h3>הצהרת אחריות ותנאי שימוש</h3>
+          <p>
+            אנא קרא/י בעיון את התנאים הבאים לפני
+            השימוש באפליקציה:
+          </p>
+          <ol>
+            <li>
+              אפליקציה זו מיועדת למעקב אחר הוצאות
+              אישיות בלבד ואינה מהווה ייעוץ פיננסי
+              מקצועי.
+            </li>
+            <li>
+              המידע המוצג באפליקציה הינו לצרכי
+              מעקב והתמצאות בלבד ואין להסתמך עליו
+              לצורך קבלת החלטות פיננסיות.
+            </li>
+            <li>
+              אין המפתח או האפליקציה אחראים לכל
+              נזק ישיר או עקיף שעלול להיגרם כתוצאה
+              משימוש במידע המוצג באפליקציה.
+            </li>
+            <li>
+              לקבלת ייעוץ פיננסי מקצועי, יש לפנות
+              ליועץ פיננסי מוסמך.
+            </li>
+            <li>
+              השימוש באפליקציה הינו על אחריות
+              המשתמש בלבד.
+            </li>
+          </ol>
+          <p className="terms-footer">
+            לחיצה על "מסכים/ה" מהווה הסכמה לתנאים
+            אלו.
+          </p>
+        </div>
+      </Modal>
+
       {/* Register Modal */}
       <Modal
-        title="הרשמה"
         open={isRegisterModalOpen}
         onCancel={() =>
           setIsRegisterModalOpen(false)
@@ -232,7 +321,11 @@ function Login(): JSX.Element {
         destroyOnClose
         className="modern-modal"
       >
-        <Register />
+        <Register
+          modalStateChanger={
+            setIsRegisterModalOpen
+          }
+        />
       </Modal>
 
       {/* Email Verification Modal */}

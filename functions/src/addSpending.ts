@@ -19,45 +19,98 @@ const monthsList: { [key: number]: string } = {
 
 const addSpending = functions.https.onCall(
   async (data, context) => {
-    const uid = data.uid;
-    const category = data.category;
-    const subCategory = data.subCategory;
-    const date: Timestamp = Timestamp.fromDate(
-      new Date(data.date)
-    );
-    const year = date.toDate().getFullYear();
-    const month = date.toDate().getMonth() + 1;
+    const {
+      uid,
+      category,
+      subCategory,
+      date,
+      sum,
+      note = "",
+      isPayment = false,
+      totalPayments,
+      paymentNumber,
+      originalSum,
+      parentPaymentId,
+    } = data;
 
-    const sum = data.sum;
-    const note = data.note || "";
+    if (!uid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "User ID is required"
+      );
+    }
 
-    const spendingRef = await db
-      .collection("spendings")
-      .add({
-        category: category,
-        subCategory: subCategory,
-        date: date,
-        year: year,
-        month: month,
-        sum: sum,
-        note: note,
-        uid: uid,
-      });
+    if (!category || !subCategory) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Category and subcategory are required"
+      );
+    }
 
-    const datesRef = db
-      .collection("dates")
-      .where("uid", "==", uid);
+    if (typeof sum !== "number" || sum <= 0) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Sum must be a positive number"
+      );
+    }
 
-    datesRef.get().then((querySnapshot) => {
+    try {
+      const timestamp = Timestamp.fromDate(
+        new Date(date)
+      );
+      const year = timestamp
+        .toDate()
+        .getFullYear();
+      const month =
+        timestamp.toDate().getMonth() + 1;
+
+      const spendingData = {
+        category,
+        subCategory,
+        date: timestamp,
+        year,
+        month,
+        sum,
+        note,
+        uid,
+      };
+
+      // Add payment-specific fields if this is a payment
+      if (isPayment) {
+        Object.assign(spendingData, {
+          isPayment,
+          totalPayments,
+          paymentNumber,
+          originalSum,
+        });
+
+        if (parentPaymentId) {
+          Object.assign(spendingData, {
+            parentPaymentId,
+          });
+        }
+      }
+
+      const spendingRef = await db
+        .collection("spendings")
+        .add(spendingData);
+
+      // Update dates collection
+      const datesRef = db
+        .collection("dates")
+        .where("uid", "==", uid);
+
+      const querySnapshot = await datesRef.get();
+
       if (querySnapshot.empty) {
-        db.collection("dates").add({
-          uid: uid,
+        await db.collection("dates").add({
+          uid,
           years: [
             {
-              year: year,
+              year,
               months: [
                 {
-                  month: month,
+                  month,
                   display: monthsList[month],
                 },
               ],
@@ -65,50 +118,52 @@ const addSpending = functions.https.onCall(
           ],
         });
       } else {
-        querySnapshot.docs.map((doc) => {
+        for (const doc of querySnapshot.docs) {
           const years = doc.data().years;
-
           const yearExists = years.find(
-            (yearDoc: any) =>
-              yearDoc.year === year
+            (y: any) => y.year === year
           );
 
           if (yearExists) {
             const monthExists =
               yearExists.months.find(
-                (monthDoc: any) =>
-                  monthDoc.month === month
+                (m: any) => m.month === month
               );
 
-            if (monthExists) {
-            } else {
+            if (!monthExists) {
               yearExists.months.push({
-                month: month,
+                month,
                 display: monthsList[month],
               });
             }
           } else {
             years.push({
-              year: year,
+              year,
               months: [
                 {
-                  month: month,
+                  month,
                   display: monthsList[month],
                 },
               ],
             });
           }
-          db.collection("dates")
-            .doc(doc.id)
-            .update({
-              uid: uid,
-              years: years,
-            });
-        });
-      }
-    });
 
-    return spendingRef.id;
+          await doc.ref.update({ years });
+        }
+      }
+
+      return spendingRef.id;
+    } catch (error) {
+      console.error(
+        "Error adding spending:",
+        error
+      );
+      throw new functions.https.HttpsError(
+        "internal",
+        "Error adding spending",
+        error
+      );
+    }
   }
 );
 

@@ -1,5 +1,5 @@
 class SpendingModel {
-  id: string;
+  id?: string;
   uid: string;
   category: string;
   subCategory: string;
@@ -16,7 +16,7 @@ class SpendingModel {
     date: string,
     sum: number,
     note: string,
-    id: string
+    id?: string
   ) {
     this.uid = uid;
     this.category = category;

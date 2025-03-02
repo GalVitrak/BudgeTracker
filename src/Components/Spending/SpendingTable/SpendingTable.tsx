@@ -111,6 +111,10 @@ export function SpendingTable(): JSX.Element {
 
   // Firebase Queries
   const spendingQuery = useMemo(() => {
+    if (!selectedYear || !selectedMonth) {
+      return null;
+    }
+
     return query(
       collection(db, "spendings"),
       where(
@@ -118,16 +122,8 @@ export function SpendingTable(): JSX.Element {
         "==",
         authStore.getState().user?.uid
       ),
-      where(
-        "year",
-        "==",
-        selectedYear ? Number(selectedYear) : 0
-      ),
-      where(
-        "month",
-        "==",
-        selectedMonth ? Number(selectedMonth) : 0
-      ),
+      where("year", "==", Number(selectedYear)),
+      where("month", "==", Number(selectedMonth)),
       orderBy("date", "desc")
     );
   }, [selectedYear, selectedMonth]);
@@ -254,83 +250,212 @@ export function SpendingTable(): JSX.Element {
   }, [spendingSnapshot]);
 
   useEffect(() => {
-    if (datesSnapshot?.docs[0]) {
-      const date = new DatesModel(
-        datesSnapshot.docs[0].data().uid,
-        datesSnapshot.docs[0].data().years,
-        datesSnapshot.docs[0].id
+    if (!datesSnapshot?.docs[0]) return;
+
+    const date = new DatesModel(
+      datesSnapshot.docs[0].data().uid,
+      datesSnapshot.docs[0].data().years,
+      datesSnapshot.docs[0].id
+    );
+    setDates(date);
+
+    // Sort years in descending order
+    const sortedYears = [...date.years].sort(
+      (a, b) => Number(b.year) - Number(a.year)
+    );
+
+    // Only set default year and month if they haven't been set yet
+    if (!selectedYear || !selectedMonth) {
+      const currentDate = new Date();
+      const currentYear =
+        currentDate.getFullYear();
+      const currentMonth = (
+        currentDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0");
+
+      // Try to find current year in available years
+      const currentYearData = sortedYears.find(
+        (y) => Number(y.year) === currentYear
       );
-      setDates(date);
 
-      // Sort years and months
-      date.years.sort((a, b) => {
-        if (a.year > b.year) return -1;
-        if (a.year < b.year) return 1;
-        return 0;
-      });
+      if (currentYearData) {
+        // Current year exists, use it
+        setSelectedYear(currentYear.toString());
+        setDatesYear(currentYearData);
 
-      date.years.forEach((year) => {
-        year.months.sort((a, b) => {
-          if (a.month > b.month) return -1;
-          if (a.month < b.month) return 1;
-          return 0;
-        });
-      });
-    }
-  }, [datesSnapshot]);
-
-  useEffect(() => {
-    if (!selectedYear && dates) {
-      const yearsArray = dates.years;
-      if (yearsArray && yearsArray.length > 0) {
-        const currentDate = new Date();
-        const currentYear = currentDate
-          .getFullYear()
-          .toString();
-        const currentMonth = (
-          currentDate.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0");
-
-        // Find the most recent year if current year is not available
-        const availableYear = yearsArray.find(
-          (y) => y.year === currentYear
-        )
-          ? currentYear
-          : yearsArray[0].year;
-
-        setSelectedYear(availableYear);
-        const yearData = yearsArray.find(
-          (y) => y.year === availableYear
+        // Sort months numerically
+        const sortedMonths = [
+          ...currentYearData.months,
+        ].sort(
+          (a, b) =>
+            Number(a.month) - Number(b.month)
         );
-        setDatesYear(yearData);
 
-        // Set month if available, otherwise use the most recent month
-        if (yearData) {
-          const monthExists =
-            yearData.months.some(
-              (m) => m.month === currentMonth
+        // Check if current month exists
+        const hasCurrentMonth = sortedMonths.some(
+          (m) => m.month === currentMonth
+        );
+
+        if (hasCurrentMonth) {
+          // Current month exists, use it
+          setSelectedMonth(currentMonth);
+        } else {
+          // Find the closest future month
+          const futureMonths =
+            sortedMonths.filter(
+              (m) =>
+                Number(m.month) >=
+                Number(currentMonth)
             );
-          setSelectedMonth(
-            monthExists
-              ? currentMonth
-              : yearData.months[0].month
+
+          if (futureMonths.length > 0) {
+            // Found a future month in current year
+            setSelectedMonth(
+              futureMonths[0].month
+            );
+          } else {
+            // No future months, get the first month of next year if available
+            const nextYear = sortedYears.find(
+              (y) => Number(y.year) > currentYear
+            );
+
+            if (nextYear) {
+              setSelectedYear(
+                nextYear.year.toString()
+              );
+              setDatesYear(nextYear);
+              const nextYearMonths = [
+                ...nextYear.months,
+              ].sort(
+                (a, b) =>
+                  Number(a.month) -
+                  Number(b.month)
+              );
+              if (nextYearMonths.length > 0) {
+                setSelectedMonth(
+                  nextYearMonths[0].month
+                );
+              }
+            } else {
+              // No future months in any year, fallback to most recent month
+              const pastMonths =
+                sortedMonths.sort(
+                  (a, b) =>
+                    Number(b.month) -
+                    Number(a.month)
+                );
+              if (pastMonths.length > 0) {
+                setSelectedMonth(
+                  pastMonths[0].month
+                );
+              }
+            }
+          }
+        }
+      } else {
+        // Current year not available, try to find next available year
+        const futureYears = sortedYears.filter(
+          (y) => Number(y.year) >= currentYear
+        );
+
+        if (futureYears.length > 0) {
+          const nextYear = futureYears[0];
+          setSelectedYear(
+            nextYear.year.toString()
           );
+          setDatesYear(nextYear);
+
+          const sortedMonths = [
+            ...nextYear.months,
+          ].sort(
+            (a, b) =>
+              Number(a.month) - Number(b.month)
+          );
+          if (sortedMonths.length > 0) {
+            setSelectedMonth(
+              sortedMonths[0].month
+            );
+          }
+        } else {
+          // No future years, use most recent year and month
+          const mostRecentYear = sortedYears[0];
+          setSelectedYear(
+            mostRecentYear.year.toString()
+          );
+          setDatesYear(mostRecentYear);
+
+          const sortedMonths = [
+            ...mostRecentYear.months,
+          ].sort(
+            (a, b) =>
+              Number(b.month) - Number(a.month)
+          );
+          if (sortedMonths.length > 0) {
+            setSelectedMonth(
+              sortedMonths[0].month
+            );
+          }
         }
       }
     }
-  }, [dates, selectedYear]);
+  }, [
+    datesSnapshot,
+    selectedYear,
+    selectedMonth,
+  ]);
 
   // Handlers
   const handleYearChange = (value: string) => {
     setSelectedYear(value);
-    setDatesYear(
-      dates?.years.find(
-        (y) => y.year.toString() === value
-      )
+
+    // Find the year data for the newly selected year
+    const newYearData = dates?.years.find(
+      (y) => y.year.toString() === value
     );
-    setSelectedMonth("");
+
+    setDatesYear(newYearData);
+
+    // If we have a currently selected month, check if it exists in the new year
+    if (selectedMonth && newYearData) {
+      const monthExists = newYearData.months.some(
+        (m) => m.month === selectedMonth
+      );
+
+      if (monthExists) {
+        // Keep the same month if it exists in the new year
+        return;
+      }
+
+      // If the current month doesn't exist, select the most recent month
+      const sortedMonths = [
+        ...newYearData.months,
+      ].sort(
+        (a, b) =>
+          Number(b.month) - Number(a.month)
+      );
+
+      if (sortedMonths.length > 0) {
+        const mostRecentMonth =
+          sortedMonths[0].month;
+        setSelectedMonth(mostRecentMonth);
+      }
+    } else if (newYearData) {
+      // If no month was selected, select the most recent month
+      const sortedMonths = [
+        ...newYearData.months,
+      ].sort(
+        (a, b) =>
+          Number(b.month) - Number(a.month)
+      );
+
+      if (sortedMonths.length > 0) {
+        const mostRecentMonth =
+          sortedMonths[0].month;
+        setSelectedMonth(mostRecentMonth);
+      }
+    }
   };
 
   const handleDelete = async (
@@ -344,7 +469,13 @@ export function SpendingTable(): JSX.Element {
         okText: "מחק",
         cancelText: "בטל",
         centered: true,
-        okButtonProps: { danger: true },
+        okButtonProps: {
+          danger: true,
+          style: {
+            fontWeight: 600,
+            textShadow: "none",
+          },
+        },
         width: 400,
         className: "delete-confirmation-modal",
         async onOk() {
@@ -455,16 +586,21 @@ export function SpendingTable(): JSX.Element {
                 <option value="" disabled>
                   בחר חודש
                 </option>
-                {datesYear?.months.map(
-                  (month) => (
+                {datesYear?.months
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      Number(b.month) -
+                      Number(a.month)
+                  )
+                  .map((month) => (
                     <option
                       key={month.month}
                       value={month.month}
                     >
                       {month.display}
                     </option>
-                  )
-                )}
+                  ))}
               </select>
               <label className="label">
                 חודש
@@ -481,14 +617,21 @@ export function SpendingTable(): JSX.Element {
                 <option value="" disabled>
                   בחר שנה
                 </option>
-                {dates?.years.map((year) => (
-                  <option
-                    key={year.year}
-                    value={year.year}
-                  >
-                    {year.year}
-                  </option>
-                ))}
+                {dates?.years
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      Number(b.year) -
+                      Number(a.year)
+                  )
+                  .map((year) => (
+                    <option
+                      key={year.year}
+                      value={year.year}
+                    >
+                      {year.year}
+                    </option>
+                  ))}
               </select>
               <label className="label">שנה</label>
             </div>
@@ -573,11 +716,7 @@ export function SpendingTable(): JSX.Element {
                     }
                   : undefined
               }
-              pagination={{
-                responsive: true,
-                position: ["topCenter"],
-                hideOnSinglePage: true,
-              }}
+              pagination={false}
               footer={() => (
                 <div className="table-footer">
                   סה"כ הוצאות:{" "}
@@ -595,7 +734,7 @@ export function SpendingTable(): JSX.Element {
                 </div>
               )}
               columns={columns}
-              dataSource={spendings}
+              dataSource={spendings as DataType[]}
               rowKey={(record) => record.id}
             />
           ) : (

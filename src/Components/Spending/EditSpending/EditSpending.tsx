@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { authStore } from "../../../Redux/AuthState";
 import {
   collection,
+  or,
   query,
   where,
 } from "firebase/firestore";
@@ -23,7 +24,7 @@ interface EditSpendingProps {
 export function EditSpending(
   props: EditSpendingProps
 ): JSX.Element {
-  const { register, handleSubmit } =
+  const { register, handleSubmit, setValue } =
     useForm<SpendingModel>({
       defaultValues: {
         category: props.spending.category,
@@ -50,7 +51,10 @@ export function EditSpending(
   );
   const q = query(
     categoriesRef,
-    where("uid", "in", ["allUsers", uid])
+    or(
+      where("uid", "array-contains", uid),
+      where("uid", "array-contains", "allUsers")
+    )
   );
   const [categoriesData, loading] =
     useCollectionData(q);
@@ -69,6 +73,10 @@ export function EditSpending(
     );
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryModel>();
+  const [
+    selectedSubCategory,
+    setSelectedSubCategory,
+  ] = useState(props.spending.subCategory);
 
   useEffect(() => {
     if (categories && categories.length > 0) {
@@ -79,9 +87,21 @@ export function EditSpending(
       );
       if (initialCategory) {
         setSelectedCategory(initialCategory);
+        setSelectedSubCategory(
+          props.spending.subCategory
+        );
+        setValue(
+          "subCategory",
+          props.spending.subCategory
+        );
       }
     }
-  }, [categories, props.spending.category]);
+  }, [
+    categories,
+    props.spending.category,
+    props.spending.subCategory,
+    setValue,
+  ]);
 
   async function send(spending: SpendingModel) {
     if (isSubmitting) return;
@@ -134,7 +154,7 @@ export function EditSpending(
       >
         <div className="input-group">
           <select
-            value={props.spending.category}
+            defaultValue={props.spending.category}
             className="input"
             {...register("category", {
               onChange: (e) => {
@@ -145,6 +165,8 @@ export function EditSpending(
                       e.target.value
                   );
                 setSelectedCategory(newCategory);
+                // Reset subcategory when category changes
+                setValue("subCategory", "");
               },
             })}
           >
@@ -194,11 +216,15 @@ export function EditSpending(
 
         <div className="input-group">
           <select
-            defaultValue={
-              props.spending.subCategory
-            }
+            value={selectedSubCategory}
             className="input"
-            {...register("subCategory")}
+            {...register("subCategory", {
+              onChange: (e) => {
+                setSelectedSubCategory(
+                  e.target.value
+                );
+              },
+            })}
           >
             <option
               key="subcategory-default"
@@ -207,8 +233,17 @@ export function EditSpending(
             >
               בחר תת-קטגוריה
             </option>
-            {selectedCategory?.subCategories?.map(
-              (subCategory, index) => (
+            {selectedCategory?.subCategories
+              ?.filter(
+                (subCategory) =>
+                  subCategory.uid?.includes(
+                    uid || ""
+                  ) ||
+                  subCategory.uid?.includes(
+                    "allUsers"
+                  )
+              )
+              .map((subCategory, index) => (
                 <option
                   key={`subcategory-${
                     selectedCategory.id || "noId"
@@ -217,8 +252,7 @@ export function EditSpending(
                 >
                   {subCategory.name}
                 </option>
-              )
-            )}
+              ))}
           </select>
           <label
             className="label"
@@ -262,7 +296,7 @@ export function EditSpending(
 
         <div className="input-group">
           <input
-            required
+            required={false}
             className="input"
             type="text"
             {...register("note")}

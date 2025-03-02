@@ -50,51 +50,13 @@ function BudgetGraph(): JSX.Element {
 
   const uid = authStore.getState().user?.uid;
 
-  // Set default year and month on component mount
-  useEffect(() => {
-    if (!selectedYear && dates) {
-      const yearsArray = dates.years;
-      if (yearsArray && yearsArray.length > 0) {
-        const currentDate = new Date();
-        const currentYear = currentDate
-          .getFullYear()
-          .toString();
-        const currentMonth = (
-          currentDate.getMonth() + 1
-        )
-          .toString()
-          .padStart(2, "0");
+  // Firebase queries
+  const datesRef = collection(db, "dates");
+  const datesQuery = query(
+    datesRef,
+    where("uid", "==", uid)
+  );
 
-        // Find the most recent year if current year is not available
-        const availableYear = yearsArray.find(
-          (y) => y.year === currentYear
-        )
-          ? currentYear
-          : yearsArray[0].year;
-
-        setSelectedYear(availableYear);
-        const yearData = yearsArray.find(
-          (y) => y.year === availableYear
-        );
-        setDatesYear(yearData);
-
-        // Set month if available, otherwise use the most recent month
-        if (yearData) {
-          const monthExists =
-            yearData.months.some(
-              (m) => m.month === currentMonth
-            );
-          setSelectedMonth(
-            monthExists
-              ? currentMonth
-              : yearData.months[0].month
-          );
-        }
-      }
-    }
-  }, [dates, selectedYear]);
-
-  // Fetch spendings
   const spendingRef = collection(db, "spendings");
   const spendingQuery = query(
     spendingRef,
@@ -111,18 +73,10 @@ function BudgetGraph(): JSX.Element {
     )
   );
 
-  // Fetch budgets
   const budgetsRef = collection(db, "budgets");
   const budgetQuery = query(
     budgetsRef,
     where("__name__", "==", uid)
-  );
-
-  // Fetch dates
-  const datesRef = collection(db, "dates");
-  const datesQuery = query(
-    datesRef,
-    where("uid", "==", uid)
   );
 
   const [datesSnapshot] =
@@ -132,6 +86,163 @@ function BudgetGraph(): JSX.Element {
   );
   const [budgetSnapshot] =
     useCollection(budgetQuery);
+
+  // Set default year and month on component mount
+  useEffect(() => {
+    if (!datesSnapshot?.docs[0]) return;
+
+    const date = new DatesModel(
+      datesSnapshot.docs[0].data().uid,
+      datesSnapshot.docs[0].data().years,
+      datesSnapshot.docs[0].id
+    );
+    setDates(date);
+
+    // Sort years in descending order
+    const sortedYears = [...date.years].sort(
+      (a, b) => Number(b.year) - Number(a.year)
+    );
+
+    if (!selectedYear || !selectedMonth) {
+      const currentDate = new Date();
+      const currentYear =
+        currentDate.getFullYear();
+      const currentMonth = (
+        currentDate.getMonth() + 1
+      )
+        .toString()
+        .padStart(2, "0");
+
+      // Try to find current year in available years
+      const currentYearData = sortedYears.find(
+        (y) => Number(y.year) === currentYear
+      );
+
+      if (currentYearData) {
+        // Current year exists, use it
+        setSelectedYear(currentYear.toString());
+        setDatesYear(currentYearData);
+
+        // Sort months numerically
+        const sortedMonths = [
+          ...currentYearData.months,
+        ].sort(
+          (a, b) =>
+            Number(a.month) - Number(b.month)
+        );
+
+        // Check if current month exists
+        const hasCurrentMonth = sortedMonths.some(
+          (m) => m.month === currentMonth
+        );
+
+        if (hasCurrentMonth) {
+          // Current month exists, use it
+          setSelectedMonth(currentMonth);
+        } else {
+          // Find the closest future month
+          const futureMonths =
+            sortedMonths.filter(
+              (m) =>
+                Number(m.month) >=
+                Number(currentMonth)
+            );
+
+          if (futureMonths.length > 0) {
+            // Found a future month in current year
+            setSelectedMonth(
+              futureMonths[0].month
+            );
+          } else {
+            // No future months, get the first month of next year if available
+            const nextYear = sortedYears.find(
+              (y) => Number(y.year) > currentYear
+            );
+
+            if (nextYear) {
+              setSelectedYear(
+                nextYear.year.toString()
+              );
+              setDatesYear(nextYear);
+              const nextYearMonths = [
+                ...nextYear.months,
+              ].sort(
+                (a, b) =>
+                  Number(a.month) -
+                  Number(b.month)
+              );
+              if (nextYearMonths.length > 0) {
+                setSelectedMonth(
+                  nextYearMonths[0].month
+                );
+              }
+            } else {
+              // No future months in any year, fallback to most recent month
+              const pastMonths =
+                sortedMonths.sort(
+                  (a, b) =>
+                    Number(b.month) -
+                    Number(a.month)
+                );
+              if (pastMonths.length > 0) {
+                setSelectedMonth(
+                  pastMonths[0].month
+                );
+              }
+            }
+          }
+        }
+      } else {
+        // Current year not available, try to find next available year
+        const futureYears = sortedYears.filter(
+          (y) => Number(y.year) >= currentYear
+        );
+
+        if (futureYears.length > 0) {
+          const nextYear = futureYears[0];
+          setSelectedYear(
+            nextYear.year.toString()
+          );
+          setDatesYear(nextYear);
+
+          const sortedMonths = [
+            ...nextYear.months,
+          ].sort(
+            (a, b) =>
+              Number(a.month) - Number(b.month)
+          );
+          if (sortedMonths.length > 0) {
+            setSelectedMonth(
+              sortedMonths[0].month
+            );
+          }
+        } else {
+          // No future years, use most recent year and month
+          const mostRecentYear = sortedYears[0];
+          setSelectedYear(
+            mostRecentYear.year.toString()
+          );
+          setDatesYear(mostRecentYear);
+
+          const sortedMonths = [
+            ...mostRecentYear.months,
+          ].sort(
+            (a, b) =>
+              Number(b.month) - Number(a.month)
+          );
+          if (sortedMonths.length > 0) {
+            setSelectedMonth(
+              sortedMonths[0].month
+            );
+          }
+        }
+      }
+    }
+  }, [
+    datesSnapshot,
+    selectedYear,
+    selectedMonth,
+  ]);
 
   // Load budget data when it changes
   useEffect(() => {
@@ -317,12 +428,51 @@ function BudgetGraph(): JSX.Element {
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    setDatesYear(
-      dates?.years.find(
-        (y) => y.year.toString() === year
-      )
+    const newYearData = dates?.years.find(
+      (y) => y.year.toString() === year
     );
-    setSelectedMonth("");
+    setDatesYear(newYearData);
+
+    if (selectedMonth && newYearData) {
+      const monthExists = newYearData.months.some(
+        (m) => m.month === selectedMonth
+      );
+
+      if (monthExists) {
+        return; // Keep the same month if it exists
+      }
+
+      // Try to find closest future month
+      const sortedMonths = [
+        ...newYearData.months,
+      ].sort(
+        (a, b) =>
+          Number(a.month) - Number(b.month)
+      );
+
+      const futureMonths = sortedMonths.filter(
+        (m) =>
+          Number(m.month) >= Number(selectedMonth)
+      );
+
+      if (futureMonths.length > 0) {
+        setSelectedMonth(futureMonths[0].month);
+      } else {
+        // If no future months, use first available month
+        setSelectedMonth(sortedMonths[0].month);
+      }
+    } else if (newYearData) {
+      // If no month was selected, select first available month
+      const sortedMonths = [
+        ...newYearData.months,
+      ].sort(
+        (a, b) =>
+          Number(a.month) - Number(b.month)
+      );
+      if (sortedMonths.length > 0) {
+        setSelectedMonth(sortedMonths[0].month);
+      }
+    }
   };
 
   const CustomTooltip = ({

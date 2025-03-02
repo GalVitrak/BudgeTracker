@@ -4,6 +4,7 @@ import SubCategoryModel from "../../../Models/SubCategoryModel";
 import { authStore } from "../../../Redux/AuthState";
 import {
   collection,
+  or,
   query,
   where,
 } from "firebase/firestore";
@@ -11,7 +12,7 @@ import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../../../../firebase-config";
 import CategoryModel from "../../../Models/CategoryModel";
 import { useState, useEffect } from "react";
-import spendingsService from "../../../Services/SpendingsService";
+import categoryService from "../../../Services/CategoryService";
 import notifyService from "../../../Services/NotifyService";
 
 interface addSubCategoryProps {
@@ -38,7 +39,10 @@ export function AddSubCategory(
   );
   const q = query(
     categoriesRef,
-    where("uid", "in", ["allUsers", uid])
+    or(
+      where("uid", "array-contains", uid),
+      where("uid", "array-contains", "allUsers")
+    )
   );
   const [snapshot, loading] = useCollection(q);
 
@@ -68,26 +72,7 @@ export function AddSubCategory(
 
     try {
       setIsSubmitting(true);
-
-      if (!selectedCategory) {
-        notifyService.info("בחר קטגוריה");
-        return;
-      }
-
-      if (!selectedCategory.id) {
-        // If we have a preselected category but no ID, try to find it in the categories list
-        const foundCategory = categories.find(
-          (cat) =>
-            cat.name === selectedCategory.name
-        );
-        if (!foundCategory) {
-          notifyService.error({
-            message: "לא נמצאה קטגוריה תקינה",
-          });
-          return;
-        }
-        selectedCategory.id = foundCategory.id;
-      }
+      const uid = authStore.getState().user?.uid;
 
       if (!uid) {
         notifyService.error({
@@ -96,33 +81,31 @@ export function AddSubCategory(
         return;
       }
 
-      const newSubCategory = new SubCategoryModel(
+      if (!selectedCategory?.id) {
+        notifyService.error({
+          message: "יש לבחור קטגוריה",
+        });
+        return;
+      }
+
+      await categoryService.addSubCategory(
+        selectedCategory.id,
         subCategory.name,
         uid
       );
 
-      // Create a new copy of the category to avoid mutating the state directly
-      const categoryToUpdate = {
-        ...selectedCategory,
-      };
-      if (!categoryToUpdate.subCategories) {
-        categoryToUpdate.subCategories = [];
-      }
-      categoryToUpdate.subCategories.push(
-        newSubCategory
-      );
-
-      await spendingsService.addSubCategory(
-        categoryToUpdate
-      );
       props.modalStateChanger(false);
+      notifyService.success(
+        "תת-הקטגוריה נוספה בהצלחה"
+      );
     } catch (error) {
       console.error(
-        "Error adding sub-category:",
+        "Error adding subcategory:",
         error
       );
       notifyService.error({
         message: "שגיאה בהוספת תת-הקטגוריה",
+        details: error,
       });
     } finally {
       setIsSubmitting(false);

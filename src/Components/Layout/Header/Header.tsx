@@ -9,6 +9,7 @@ import {
   SettingOutlined,
   LoginOutlined,
   HomeOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Menu } from "antd";
@@ -93,6 +94,15 @@ function Header(): JSX.Element {
       key: "spending-table",
       icon: (
         <TableOutlined
+          style={{ fontSize: "18px" }}
+        />
+      ),
+    },
+    {
+      label: "ניהול קטגוריות",
+      key: "categories",
+      icon: (
+        <AppstoreOutlined
           style={{ fontSize: "18px" }}
         />
       ),

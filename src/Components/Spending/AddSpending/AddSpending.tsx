@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { authStore } from "../../../Redux/AuthState";
 import {
   collection,
+  or,
   query,
   where,
 } from "firebase/firestore";
@@ -13,9 +14,11 @@ import notifyService from "../../../Services/NotifyService";
 import { Modal } from "antd";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import CategoryModel from "../../../Models/CategoryModel";
+import PaymentPlan from "../../../Models/PaymentPlan";
 import spendingsService from "../../../Services/SpendingsService";
 import { AddCategory } from "../AddCategory/AddCategory";
 import { AddSubCategory } from "../AddSubCategory/AddSubCategory";
+import { Switch } from "antd";
 
 interface addSpendingProps {
   modalStateChanger: Function;
@@ -25,28 +28,44 @@ interface addSpendingProps {
 export function AddSpending(
   props: addSpendingProps
 ): JSX.Element {
-  const { register, handleSubmit } =
-    useForm<SpendingModel>();
-  const [
-    isNewCategoryModalOpen,
-    setIsNewCategoryModalOpen,
-  ] = useState(false);
-  const [
-    isNewSubCategoryModalOpen,
-    setIsNewSubCategoryModalOpen,
-  ] = useState(false);
-  const [selectedDate, setSelectedDate] =
-    useState<string>(
-      new Date().toISOString().split("T")[0]
-    );
   const [selectedCategory, setSelectedCategory] =
-    useState<CategoryModel>();
+    useState<CategoryModel | undefined>(
+      undefined
+    );
   const [
     selectedSubCategory,
     setSelectedSubCategory,
-  ] = useState<string>("");
+  ] = useState<string>("default");
+  const [selectedDate, setSelectedDate] =
+    useState(
+      new Date().toISOString().split("T")[0]
+    );
   const [isSubmitting, setIsSubmitting] =
     useState(false);
+  const [isPayment, setIsPayment] =
+    useState<boolean>(false);
+  const [totalPayments, setTotalPayments] =
+    useState<number>(2);
+  const [firstPayment, setFirstPayment] =
+    useState<number>(1);
+  const [
+    isAddCategoryModalOpen,
+    setIsAddCategoryModalOpen,
+  ] = useState(false);
+  const [
+    isAddSubCategoryModalOpen,
+    setIsAddSubCategoryModalOpen,
+  ] = useState(false);
+
+  const { register, handleSubmit, getValues } =
+    useForm<SpendingModel>({
+      defaultValues: {
+        note: "",
+        category: "",
+        subCategory: "",
+        date: selectedDate,
+      },
+    });
 
   const uid = authStore.getState().user?.uid;
   const categoriesRef = collection(
@@ -55,7 +74,10 @@ export function AddSpending(
   );
   const q = query(
     categoriesRef,
-    where("uid", "in", ["allUsers", uid])
+    or(
+      where("uid", "array-contains", uid),
+      where("uid", "array-contains", "allUsers")
+    )
   );
   const [categoriesData, loading] =
     useCollectionData(q);
@@ -69,54 +91,72 @@ export function AddSpending(
 
     try {
       setIsSubmitting(true);
+      console.log(isPayment);
+      console.log(firstPayment);
+      console.log(totalPayments);
 
-      if (
-        !selectedCategory ||
-        selectedCategory.name !==
-          spending.category
-      ) {
-        notifyService.info("בחר קטגוריה תקינה");
-        return;
-      }
-
-      if (
-        selectedSubCategory === "default" ||
-        !spending.subCategory
-      ) {
-        notifyService.info("בחר תת-קטגוריה");
-        return;
-      }
-
-      const year = selectedDate.split("-")[0];
-      const month = selectedDate.split("-")[1];
-      spending.year = +year;
-      spending.month = +month;
-
-      // Ensure the category and subcategory match the selected values
-      spending.category = selectedCategory.name;
-      spending.subCategory = selectedSubCategory;
-
-      await spendingsService
-        .addSpending(spending)
-        .then((id) => {
-          if (id === "empty :(") {
-            return;
-          } else {
-            spending.id = id;
-            const date = new Intl.DateTimeFormat(
-              "he-IL",
-              {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              }
-            ).format(new Date(selectedDate));
-            spending.date = date;
-
-            props.spendingStateChanger(spending);
-            props.modalStateChanger(false);
-          }
+      if (!uid) {
+        notifyService.error({
+          message: "משתמש לא מחובר",
         });
+        return;
+      }
+
+      if (!selectedCategory) {
+        notifyService.info("בחר קטגוריה");
+        return;
+      }
+
+      if (
+        isPayment &&
+        (!firstPayment || !totalPayments)
+      ) {
+        notifyService.error({
+          message: "יש להזין את פרטי התשלומים",
+        });
+        return;
+      }
+
+      if (isPayment) {
+        // creates a payments plan object
+        console.log(totalPayments);
+
+        const paymentsPlan = new PaymentPlan(
+          spending.sum,
+          firstPayment,
+          totalPayments,
+          spending.date,
+          spending.category,
+          spending.subCategory,
+          spending.note
+        );
+
+        const addedSpendings =
+          await spendingsService.addPaymentsPlan(
+            paymentsPlan
+          );
+
+        props.spendingStateChanger(
+          addedSpendings[0]
+        );
+      } else {
+        const newSpending = new SpendingModel(
+          uid,
+          spending.category,
+          spending.subCategory,
+          spending.date,
+          spending.sum,
+          spending.note,
+          ""
+        );
+
+        await spendingsService.addSpending(
+          newSpending
+        );
+        props.spendingStateChanger(newSpending);
+      }
+
+      props.modalStateChanger(false);
     } catch (error) {
       console.error(
         "Error adding spending:",
@@ -145,7 +185,7 @@ export function AddSpending(
             {...register("category", {
               onChange: (e) => {
                 if (e.target.value === "new") {
-                  setIsNewCategoryModalOpen(true);
+                  setIsAddCategoryModalOpen(true);
                   e.target.value = "default";
                   return;
                 }
@@ -206,7 +246,7 @@ export function AddSpending(
             {...register("subCategory", {
               onChange: (e) => {
                 if (e.target.value === "new") {
-                  setIsNewSubCategoryModalOpen(
+                  setIsAddSubCategoryModalOpen(
                     true
                   );
                   setSelectedSubCategory(
@@ -277,12 +317,93 @@ export function AddSpending(
             type="number"
             step={0.01}
             min={1}
-            {...register("sum")}
+            {...register("sum", {
+              valueAsNumber: true,
+            })}
           />
           <label className="label" htmlFor="sum">
             סכום
           </label>
         </div>
+
+        <div className="payment-toggle">
+          <label>תשלומים</label>
+          <Switch
+            checked={isPayment}
+            onChange={(checked) => {
+              setIsPayment(checked);
+              if (!checked) {
+                setTotalPayments(1);
+                setFirstPayment(0);
+              }
+            }}
+          />
+        </div>
+
+        {isPayment && (
+          <>
+            <div className="input-group">
+              <select
+                className="input"
+                value={totalPayments}
+                onChange={(e) => {
+                  console.log(e.target.value);
+
+                  setTotalPayments(
+                    Number(e.target.value)
+                  );
+                }}
+              >
+                {Array.from(
+                  { length: 35 },
+                  (_, i) => i + 2
+                ).map((num) => (
+                  <option key={num} value={num}>
+                    {num} תשלומים
+                  </option>
+                ))}
+              </select>
+              <label className="label">
+                מספר תשלומים
+              </label>
+            </div>
+
+            <div className="input-group">
+              <input
+                name="firstPayment"
+                className="input"
+                required
+                type="number"
+                step={0.01}
+                min={1}
+                value={firstPayment}
+                onChange={(e) => {
+                  const value = Number(
+                    e.target.value
+                  );
+                  const totalSum = Number(
+                    getValues("sum")
+                  );
+                  if (value > totalSum) {
+                    notifyService.error({
+                      message:
+                        "התשלום הראשון לא יכול להיות גדול מהסכום הכולל",
+                    });
+                    return;
+                  }
+                  setFirstPayment(value);
+                }}
+              />
+              <label
+                className="label"
+                htmlFor="firstPayment"
+              >
+                תשלום ראשון
+              </label>
+            </div>
+          </>
+        )}
+
         <div className="input-group">
           <input
             className="input"
@@ -308,14 +429,14 @@ export function AddSpending(
         footer={null}
         centered
         title="הוספת קטגוריה חדשה"
-        open={isNewCategoryModalOpen}
+        open={isAddCategoryModalOpen}
         onCancel={() =>
-          setIsNewCategoryModalOpen(false)
+          setIsAddCategoryModalOpen(false)
         }
       >
         <AddCategory
           modalStateChanger={
-            setIsNewCategoryModalOpen
+            setIsAddCategoryModalOpen
           }
         />
       </Modal>
@@ -325,14 +446,14 @@ export function AddSpending(
         footer={null}
         centered
         title="הוספת תת-קטגוריה חדשה"
-        open={isNewSubCategoryModalOpen}
+        open={isAddSubCategoryModalOpen}
         onCancel={() =>
-          setIsNewSubCategoryModalOpen(false)
+          setIsAddSubCategoryModalOpen(false)
         }
       >
         <AddSubCategory
           modalStateChanger={
-            setIsNewSubCategoryModalOpen
+            setIsAddSubCategoryModalOpen
           }
           preSelectedCategory={selectedCategory}
         />

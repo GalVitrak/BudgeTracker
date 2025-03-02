@@ -3,7 +3,6 @@ import { functions } from "../../firebase-config";
 import { authStore } from "../Redux/AuthState";
 import notifyService from "./NotifyService";
 import SpendingModel from "../Models/SpendingModel";
-import CategoryModel from "../Models/CategoryModel";
 
 class SpendingsService {
   public async addSpending(
@@ -29,6 +28,93 @@ class SpendingsService {
       });
 
     return spending.id || "empty :(";
+  }
+
+  public async addPaymentsPlan(
+    paymentPlan: any
+  ): Promise<SpendingModel[]> {
+    const addSpending = httpsCallable(
+      functions,
+      "addSpending"
+    );
+
+    const addedSpendings: SpendingModel[] = [];
+
+    const uid =
+      authStore.getState().user?.uid || "";
+
+    const totalSum = paymentPlan.totalSum;
+    const firstPayment = paymentPlan.firstPayment;
+    const numberOfPayments =
+      paymentPlan.numberOfPayments;
+    let date = paymentPlan.date;
+    const category = paymentPlan.category;
+    const subCategory = paymentPlan.subCategory;
+    const note = paymentPlan.note;
+
+    const spending = new SpendingModel(
+      uid,
+      category,
+      subCategory,
+      date,
+      firstPayment,
+      note + " תשלום 1/" + numberOfPayments
+    );
+
+    await addSpending(spending).then((result) => {
+      console.log(result);
+      console.log("added first spending");
+
+      spending.id = result.data as string;
+      addedSpendings.push(spending);
+    });
+
+    const newTotalSum = totalSum - firstPayment;
+    console.log(newTotalSum);
+    console.log(numberOfPayments);
+
+    for (let i = 2; i <= numberOfPayments; i++) {
+      console.log("adding next spending");
+      const nextDate = new Date(date);
+      nextDate.setMonth(nextDate.getMonth() + 1);
+
+      if (nextDate.getMonth() === 12) {
+        nextDate.setFullYear(
+          nextDate.getFullYear() + 1
+        );
+        nextDate.setMonth(0);
+      }
+
+      date = nextDate.toISOString().split("T")[0];
+
+      const nextSpending = new SpendingModel(
+        uid,
+        category,
+        subCategory,
+        date,
+        newTotalSum / (numberOfPayments - 1),
+        note +
+          " תשלום " +
+          i +
+          "/" +
+          numberOfPayments
+      );
+
+      await addSpending(nextSpending).then(
+        (result) => {
+          console.log(result);
+          console.log("added next spending");
+          nextSpending.id = result.data as string;
+          addedSpendings.push(nextSpending);
+        }
+      );
+    }
+
+    notifyService.success(
+      "תשלומים נוספים בהצלחה"
+    );
+
+    return addedSpendings;
   }
 
   public async updateSpending(
@@ -66,55 +152,6 @@ class SpendingsService {
       });
   }
 
-  public async addCategory(
-    category: CategoryModel
-  ): Promise<string> {
-    const addCategory = httpsCallable(
-      functions,
-      "addCategory"
-    );
-
-    await addCategory(category)
-      .then(() => {
-        notifyService.success(
-          "קטגוריה נוספה בהצלחה"
-        );
-      })
-      .catch((error) => {
-        notifyService.error(error);
-        throw error;
-      });
-
-    return category.id || "empty :(";
-  }
-
-  public async addSubCategory(
-    category: CategoryModel
-  ): Promise<string> {
-    const addSubCategory = httpsCallable(
-      functions,
-      "addSubCategory"
-    );
-
-    await addSubCategory({
-      categoryId: category.id,
-      newSubCategory:
-        category.subCategories[
-          category.subCategories.length - 1
-        ],
-    })
-      .then(() => {
-        notifyService.success(
-          "תת קטגוריה נוספה בהצלחה"
-        );
-      })
-      .catch((error) => {
-        notifyService.error(error);
-        throw error;
-      });
-    return "empty :(";
-  }
-
   public async deleteSpending(
     spendingId: string
   ): Promise<void> {
@@ -139,5 +176,4 @@ class SpendingsService {
 }
 
 const spendingsService = new SpendingsService();
-
 export default spendingsService;

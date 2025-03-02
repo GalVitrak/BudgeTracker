@@ -9,6 +9,7 @@ import {
   signInWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
+  signOut,
 } from "firebase/auth";
 import notifyService from "./NotifyService";
 import CredentialsModel from "../Models/CredentialsModel";
@@ -175,6 +176,48 @@ class AuthService {
         code: error.code,
         message: error.message,
       });
+      throw error;
+    }
+  }
+
+  public async verifyCredentials(
+    credentials: CredentialsModel
+  ): Promise<boolean> {
+    try {
+      const userCredential =
+        await signInWithEmailAndPassword(
+          auth,
+          credentials.email,
+          credentials.password
+        );
+
+      if (!userCredential.user.emailVerified) {
+        throw new Error(
+          "auth/email-not-verified"
+        );
+      }
+
+      // Sign out immediately since we're just verifying
+      await signOut(auth);
+      return true;
+    } catch (error: any) {
+      if (
+        error.code === "auth/invalid-credential"
+      ) {
+        notifyService.error({
+          message: "שם משתמש או סיסמה שגויים",
+        });
+      } else if (
+        error.message ===
+        "auth/email-not-verified"
+      ) {
+        notifyService.error({
+          message:
+            "יש לאמת את כתובת הדוא״ל לפני ההתחברות",
+        });
+      } else {
+        notifyService.error(error);
+      }
       throw error;
     }
   }
