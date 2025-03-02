@@ -39,10 +39,6 @@ A modern, user-friendly application for tracking personal expenses, managing bud
 - [Recharts](https://recharts.org/) - Chart visualization
 - [Ant Design](https://ant.design/) - UI components
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - Inspired by the need for better personal finance management tools
