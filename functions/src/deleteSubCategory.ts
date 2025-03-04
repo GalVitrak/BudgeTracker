@@ -37,7 +37,6 @@ const deleteSubCategory = functions.https.onCall(
         );
       }
 
-      console.log("Category data:", categoryData);
 
       const subCategory =
         categoryData.subCategories.find(
@@ -52,10 +51,7 @@ const deleteSubCategory = functions.https.onCall(
         );
       }
 
-      console.log(
-        "Found subcategory:",
-        subCategory
-      );
+
 
       // Check if subcategory is default
       if (subCategory.isDefault) {
@@ -70,10 +66,7 @@ const deleteSubCategory = functions.https.onCall(
         subCategory.uid &&
         subCategory.uid.length > 1
       ) {
-        console.log(
-          "Removing user from subcategory:",
-          uid
-        );
+    
         const updatedSubCategories =
           categoryData.subCategories.map(
             (sub: any) => {
@@ -96,7 +89,6 @@ const deleteSubCategory = functions.https.onCall(
       }
 
       // If this is the last user, remove the entire subcategory
-      console.log("Removing entire subcategory");
       const updatedSubCategories =
         categoryData.subCategories.filter(
           (sub: any) =>

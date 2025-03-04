@@ -25,8 +25,8 @@ import spendingsService from "../../../Services/SpendingsService";
 
 // Components
 import { AddSpending } from "../AddSpending/AddSpending";
-import { AddCategory } from "../AddCategory/AddCategory";
-import { AddSubCategory } from "../AddSubCategory/AddSubCategory";
+import { AddCategory } from "../../Categories/AddCategory/AddCategory";
+import { AddSubCategory } from "../../Categories/AddSubCategory/AddSubCategory";
 import { EditSpending } from "../EditSpending/EditSpending";
 
 // Services & Config

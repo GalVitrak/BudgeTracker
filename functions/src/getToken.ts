@@ -18,7 +18,6 @@ const getToken = functions.https.onCall(
       );
     }
     snapshot.forEach((doc) => {
-      console.log(doc.data());
       token = cyber.getNewToken(doc.data());
     });
     return token;

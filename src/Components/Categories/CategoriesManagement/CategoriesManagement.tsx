@@ -46,19 +46,12 @@ export function CategoriesManagement(): JSX.Element {
     isAddSubcategoryModalVisible,
     setIsAddSubcategoryModalVisible,
   ] = useState(false);
-  const [
-    isEditSubcategoryModalVisible,
-    setIsEditSubcategoryModalVisible,
-  ] = useState(false);
+
   const [newCategoryName, setNewCategoryName] =
     useState("");
   const [
     newSubcategoryName,
     setNewSubcategoryName,
-  ] = useState("");
-  const [
-    oldSubcategoryName,
-    setOldSubcategoryName,
   ] = useState("");
 
   const uid = authStore.getState().user?.uid;
@@ -96,7 +89,7 @@ export function CategoriesManagement(): JSX.Element {
 
   const handleEditCategory = (
     category: CategoryModel
-  ) => {
+  ): void => {
     if (category.isDefault) {
       notifyService.warning(
         "לא ניתן לערוך קטגוריות ברירת מחדל"
@@ -162,9 +155,7 @@ export function CategoriesManagement(): JSX.Element {
         newCategoryName.trim()
       );
       setIsEditModalVisible(false);
-      notifyService.success(
-        "הקטגוריה עודכנה בהצלחה"
-      );
+ 
     } catch (error) {
       notifyService.error({
         message: "שגיאה בעדכון הקטגוריה",
@@ -181,9 +172,7 @@ export function CategoriesManagement(): JSX.Element {
         uid
       );
       setIsDeleteModalVisible(false);
-      notifyService.success(
-        "הקטגוריה נמחקה בהצלחה"
-      );
+    
     } catch (error) {
       notifyService.error({
         message: "שגיאה במחיקת הקטגוריה",
@@ -207,9 +196,7 @@ export function CategoriesManagement(): JSX.Element {
           uid
         );
         setIsDeleteSubCategoryModalVisible(false);
-        notifyService.success(
-          "תת-הקטגוריה נמחקה בהצלחה"
-        );
+     
       } catch (error) {
         notifyService.error({
           message: "שגיאה במחיקת תת-הקטגוריה",
@@ -233,9 +220,7 @@ export function CategoriesManagement(): JSX.Element {
       );
       setIsAddSubcategoryModalVisible(false);
       setNewSubcategoryName("");
-      notifyService.success(
-        "תת-הקטגוריה נוספה בהצלחה"
-      );
+  
     } catch (error) {
       console.error(
         "Error adding subcategory:",
@@ -247,74 +232,6 @@ export function CategoriesManagement(): JSX.Element {
       });
     }
   };
-
-  const handleEditSubCategory = (
-    category: CategoryModel,
-    subCategoryName: string
-  ) => {
-    const subCategory =
-      category.subCategories.find(
-        (sub) => sub.name === subCategoryName
-      );
-    if (subCategory?.isDefault) {
-      notifyService.warning(
-        "לא ניתן לערוך תת-קטגוריות ברירת מחדל"
-      );
-      return;
-    }
-    setSelectedCategory(category);
-    setOldSubcategoryName(subCategoryName);
-    setNewSubcategoryName(subCategoryName);
-    setIsEditSubcategoryModalVisible(true);
-  };
-
-  const handleEditSubCategorySubmit =
-    async () => {
-      if (
-        !selectedCategory ||
-        !oldSubcategoryName ||
-        !newSubcategoryName.trim() ||
-        !uid
-      )
-        return;
-
-      try {
-        const updatedSubCategories =
-          selectedCategory.subCategories.map(
-            (subCategory) => {
-              if (
-                subCategory.name ===
-                oldSubcategoryName
-              ) {
-                return {
-                  ...subCategory,
-                  name: newSubcategoryName.trim(),
-                };
-              }
-              return subCategory;
-            }
-          );
-
-        const updatedCategory = {
-          ...selectedCategory,
-          subCategories: updatedSubCategories,
-        };
-
-        await categoryService.updateCategory(
-          updatedCategory,
-          updatedCategory.name
-        );
-
-        setIsEditSubcategoryModalVisible(false);
-        notifyService.success(
-          "תת-הקטגוריה עודכנה בהצלחה"
-        );
-      } catch (error) {
-        notifyService.error({
-          message: "שגיאה בעדכון תת-הקטגוריה",
-        });
-      }
-    };
 
   const filterSubCategories = (
     category: CategoryModel
@@ -420,15 +337,6 @@ export function CategoriesManagement(): JSX.Element {
                         </div>
                       ) : (
                         <div className="subcategory-actions">
-                          <EditOutlined
-                            className="edit-subcategory-icon"
-                            onClick={() =>
-                              handleEditSubCategory(
-                                category,
-                                subCategory.name
-                              )
-                            }
-                          />
                           <DeleteOutlined
                             className="delete-subcategory-icon"
                             onClick={() =>
@@ -529,38 +437,6 @@ export function CategoriesManagement(): JSX.Element {
             setIsAddSubcategoryModalVisible(false)
           }
           okText="הוסף"
-          cancelText="בטל"
-          centered
-        >
-          <div className="input-group">
-            <input
-              type="text"
-              className="input"
-              value={newSubcategoryName}
-              onChange={(e) =>
-                setNewSubcategoryName(
-                  e.target.value
-                )
-              }
-              required
-            />
-            <label className="label">
-              שם תת-הקטגוריה
-            </label>
-          </div>
-        </Modal>
-
-        {/* Edit Subcategory Modal */}
-        <Modal
-          title="עריכת תת-קטגוריה"
-          open={isEditSubcategoryModalVisible}
-          onOk={handleEditSubCategorySubmit}
-          onCancel={() =>
-            setIsEditSubcategoryModalVisible(
-              false
-            )
-          }
-          okText="שמור"
           cancelText="בטל"
           centered
         >

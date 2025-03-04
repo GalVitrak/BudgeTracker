@@ -62,19 +62,13 @@ class SpendingsService {
     );
 
     await addSpending(spending).then((result) => {
-      console.log(result);
-      console.log("added first spending");
-
       spending.id = result.data as string;
       addedSpendings.push(spending);
     });
 
     const newTotalSum = totalSum - firstPayment;
-    console.log(newTotalSum);
-    console.log(numberOfPayments);
 
     for (let i = 2; i <= numberOfPayments; i++) {
-      console.log("adding next spending");
       const nextDate = new Date(date);
       nextDate.setMonth(nextDate.getMonth() + 1);
 
@@ -102,8 +96,6 @@ class SpendingsService {
 
       await addSpending(nextSpending).then(
         (result) => {
-          console.log(result);
-          console.log("added next spending");
           nextSpending.id = result.data as string;
           addedSpendings.push(nextSpending);
         }

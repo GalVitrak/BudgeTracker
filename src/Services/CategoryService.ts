@@ -14,10 +14,7 @@ class CategoryService {
     category: CategoryModel
   ): Promise<string> {
     try {
-      console.log(
-        "CategoryService: Received category data:",
-        JSON.stringify(category, null, 2)
-      );
+
 
       // Create a plain object from the category model
       const categoryData = {
@@ -33,26 +30,18 @@ class CategoryService {
         isDefault: category.isDefault || false,
       };
 
-      console.log(
-        "CategoryService: Transformed data for Firebase:",
-        JSON.stringify(categoryData, null, 2)
-      );
+
 
       const addCategory = httpsCallable(
         functions,
         "addCategory"
       );
 
-      console.log(
-        "CategoryService: Calling Firebase function..."
-      );
+  
       const result = await addCategory(
         categoryData
       );
-      console.log(
-        "CategoryService: Firebase function result:",
-        result
-      );
+     
 
       notifyService.success(
         "קטגוריה נוספה בהצלחה"

@@ -304,16 +304,16 @@ function BudgetGraph(): JSX.Element {
             name: spending.category,
             spent: 0,
             budget: 0,
-            subCategories: {},
-          };
-        }
+                subCategories: {},
+              };
+            }
 
-        // Add to category total
+            // Add to category total
         categoryTotals[spending.category].spent +=
-          Number(spending.sum);
+              Number(spending.sum);
 
-        // Initialize subcategory if doesn't exist
-        if (
+            // Initialize subcategory if doesn't exist
+            if (
           !categoryTotals[spending.category]
             .subCategories[spending.subCategory]
         ) {
@@ -328,9 +328,9 @@ function BudgetGraph(): JSX.Element {
 
         // Add to subcategory total
         categoryTotals[
-          spending.category
-        ].subCategories[
-          spending.subCategory
+                spending.category
+              ].subCategories[
+                spending.subCategory
         ].spent += Number(spending.sum);
       });
     }
@@ -373,7 +373,7 @@ function BudgetGraph(): JSX.Element {
           )} ${category.name}`,
           הוצאות: category.spent,
           תקציב: category.budget,
-          subCategories: Object.entries(
+        subCategories: Object.entries(
             category.subCategories
           ).map(
             ([name, data]: [string, any]) => ({
@@ -398,7 +398,7 @@ function BudgetGraph(): JSX.Element {
       },
     ];
 
-    setChartData(chartData);
+      setChartData(chartData);
   }, [spendingSnapshot, budgets, budgetSnapshot]);
 
   // Update dates when date snapshot changes
@@ -429,7 +429,7 @@ function BudgetGraph(): JSX.Element {
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
     const newYearData = dates?.years.find(
-      (y) => y.year.toString() === year
+        (y) => y.year.toString() === year
     );
     setDatesYear(newYearData);
 
@@ -732,11 +732,11 @@ function BudgetGraph(): JSX.Element {
           </div>
         )}
         {spendingSnapshot?.docs.length === 0 ? (
-          <div className="loading-container">
-            <LoadingOutlined
-              style={{ fontSize: 24 }}
-            />
-          </div>
+        <div className="loading-container">
+          <LoadingOutlined
+            style={{ fontSize: 24 }}
+          />
+        </div>
         ) : chartData.length === 0 ? (
           <div className="empty-state">
             <h2>אין נתונים להצגה</h2>
@@ -747,10 +747,10 @@ function BudgetGraph(): JSX.Element {
               className="chart-wrapper"
               style={{ height: "500px" }}
             >
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
+            <ResponsiveContainer
+              width="100%"
+              height="100%"
+            >
                 <BarChart
                   data={chartData}
                   margin={{
@@ -936,7 +936,7 @@ function BudgetGraph(): JSX.Element {
                         entry.payload &&
                         entry.payload.הוצאות >
                           entry.payload.תקציב;
-                      return (
+                    return (
                         <span
                           style={{
                             color:
@@ -976,12 +976,12 @@ function BudgetGraph(): JSX.Element {
                     }
                     fill="#0088FE"
                     label={false}
-                  >
-                    {chartData.map(
-                      (entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
+                >
+                  {chartData.map(
+                    (entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
                             budgets.length > 0 &&
                             !entry.name.includes(
                               "חיסכון"
@@ -990,17 +990,17 @@ function BudgetGraph(): JSX.Element {
                               entry.תקציב
                               ? "#ff4d4f"
                               : "#0088FE"
-                          }
-                        />
-                      )
-                    )}
+                        }
+                      />
+                    )
+                  )}
                   </Bar>
                 </BarChart>
-              </ResponsiveContainer>
-            </div>
+            </ResponsiveContainer>
+          </div>
           </>
         )}
-      </div>
+        </div>
     </div>
   );
 }

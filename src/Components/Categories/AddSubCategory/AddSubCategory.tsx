@@ -95,9 +95,7 @@ export function AddSubCategory(
       );
 
       props.modalStateChanger(false);
-      notifyService.success(
-        "תת-הקטגוריה נוספה בהצלחה"
-      );
+   
     } catch (error) {
       console.error(
         "Error adding subcategory:",

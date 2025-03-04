@@ -16,8 +16,8 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 import CategoryModel from "../../../Models/CategoryModel";
 import PaymentPlan from "../../../Models/PaymentPlan";
 import spendingsService from "../../../Services/SpendingsService";
-import { AddCategory } from "../AddCategory/AddCategory";
-import { AddSubCategory } from "../AddSubCategory/AddSubCategory";
+import { AddCategory } from "../../Categories/AddCategory/AddCategory";
+import { AddSubCategory } from "../../Categories/AddSubCategory/AddSubCategory";
 import { Switch } from "antd";
 
 interface addSpendingProps {
@@ -91,9 +91,7 @@ export function AddSpending(
 
     try {
       setIsSubmitting(true);
-      console.log(isPayment);
-      console.log(firstPayment);
-      console.log(totalPayments);
+
 
       if (!uid) {
         notifyService.error({
@@ -119,7 +117,6 @@ export function AddSpending(
 
       if (isPayment) {
         // creates a payments plan object
-        console.log(totalPayments);
 
         const paymentsPlan = new PaymentPlan(
           spending.sum,
@@ -347,7 +344,6 @@ export function AddSpending(
                 className="input"
                 value={totalPayments}
                 onChange={(e) => {
-                  console.log(e.target.value);
 
                   setTotalPayments(
                     Number(e.target.value)

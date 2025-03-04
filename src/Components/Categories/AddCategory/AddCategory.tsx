@@ -19,28 +19,19 @@ interface CategoryFormData {
 export function AddCategory(
   props: addCategoryProps
 ): JSX.Element {
-  const { register, handleSubmit, watch } =
+  const { register, handleSubmit } =
     useForm<CategoryFormData>();
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  // Watch form values for logging
-  const formValues = watch();
-  console.log("Current form values:", formValues);
-
   async function send(
     formData: CategoryFormData
   ) {
-    console.log(
-      "Starting category creation with data:",
-      formData
-    );
     if (isSubmitting) return;
 
     try {
       setIsSubmitting(true);
       const uid = authStore.getState().user?.uid;
-      console.log("Current user UID:", uid);
 
       if (!uid) {
         console.error("No user UID found");
@@ -51,26 +42,16 @@ export function AddCategory(
       }
 
       // Create a new subcategory with the proper model
-      console.log(
-        "Creating subcategory with name:",
-        formData.subCategory
-      );
+
       const newSubCategory =
         new subCategoriesModel(
           formData.subCategory,
           [uid],
           false
         );
-      console.log(
-        "Created subcategory model:",
-        newSubCategory
-      );
 
       // Create the category with the subcategory
-      console.log(
-        "Creating category with name:",
-        formData.name
-      );
+
       const newCategory = new CategoryModel(
         [uid],
         formData.name,
@@ -78,22 +59,10 @@ export function AddCategory(
         undefined,
         false
       );
-      console.log(
-        "Created category model:",
-        newCategory
-      );
 
-      console.log(
-        "Sending category to service..."
-      );
-      const result =
         await categoryService.addCategory(
           newCategory
         );
-      console.log(
-        "Category creation result:",
-        result
-      );
 
       props.modalStateChanger(false);
     } catch (error) {
@@ -121,13 +90,7 @@ export function AddCategory(
             className="input"
             required
             type="text"
-            {...register("name", {
-              onChange: (e) =>
-                console.log(
-                  "Category name changed:",
-                  e.target.value
-                ),
-            })}
+            {...register("name")}
           />
           <label className="label">
             שם הקטגוריה
@@ -138,13 +101,7 @@ export function AddCategory(
             className="input"
             required
             type="text"
-            {...register("subCategory", {
-              onChange: (e) =>
-                console.log(
-                  "Subcategory name changed:",
-                  e.target.value
-                ),
-            })}
+            {...register("subCategory")}
           />
           <label className="label">
             תת-קטגוריה
