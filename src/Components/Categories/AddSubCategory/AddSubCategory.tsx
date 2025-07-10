@@ -11,13 +11,18 @@ import {
 import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../../../../firebase-config";
 import CategoryModel from "../../../Models/CategoryModel";
-import { useState, useEffect } from "react";
+import {
+  useState,
+  useEffect,
+  useMemo,
+} from "react";
 import categoryService from "../../../Services/CategoryService";
 import notifyService from "../../../Services/NotifyService";
 
 interface addSubCategoryProps {
   modalStateChanger: Function;
   preSelectedCategory?: CategoryModel;
+  setSelectedCategory: Function;
 }
 
 export function AddSubCategory(
@@ -29,7 +34,7 @@ export function AddSubCategory(
     useState(false);
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryModel | undefined>(
-      props.preSelectedCategory
+      undefined
     );
 
   const uid = authStore.getState().user?.uid;
@@ -46,24 +51,48 @@ export function AddSubCategory(
   );
   const [snapshot, loading] = useCollection(q);
 
+  // Memoize the categories array to prevent infinite re-renders
   const categories: CategoryModel[] =
-    snapshot?.docs.map(
-      (doc) =>
-        new CategoryModel(
-          doc.data().uid,
-          doc.data().name,
-          doc.data().subCategories,
-          doc.id
-        )
-    ) || [];
-
-  useEffect(() => {
-    if (props.preSelectedCategory) {
-      setSelectedCategory(
-        props.preSelectedCategory
+    useMemo(() => {
+      return (
+        snapshot?.docs.map(
+          (doc) =>
+            new CategoryModel(
+              doc.data().uid,
+              doc.data().name,
+              doc.data().subCategories,
+              doc.id
+            )
+        ) || []
       );
+    }, [snapshot]);
+
+  // Fix the useEffect to properly set the preselected category
+  useEffect(() => {
+    if (
+      props.preSelectedCategory &&
+      categories.length > 0 &&
+      !loading
+    ) {
+      // Find the category in the loaded categories array that matches the preselected one
+      const matchingCategory = categories.find(
+        (cat) =>
+          cat.id ===
+            props.preSelectedCategory?.id ||
+          cat.name ===
+            props.preSelectedCategory?.name
+      );
+
+      if (matchingCategory) {
+        setSelectedCategory(matchingCategory);
+      }
     }
-  }, [props.preSelectedCategory]);
+  }, [
+    props.preSelectedCategory?.id, // Use specific properties instead of the whole object
+    props.preSelectedCategory?.name,
+    categories.length, // Use length instead of the whole array
+    loading,
+  ]);
 
   async function send(
     subCategory: SubCategoryModel
@@ -94,8 +123,13 @@ export function AddSubCategory(
         uid
       );
 
+      selectedCategory.subCategories.push(
+        subCategory
+      );
+
+      props.setSelectedCategory(selectedCategory);
+
       props.modalStateChanger(false);
-   
     } catch (error) {
       console.error(
         "Error adding subcategory:",
@@ -119,8 +153,8 @@ export function AddSubCategory(
         <div className="input-group">
           <select
             value={
-              selectedCategory?.name || "value"
-            }
+              selectedCategory?.name || "default"
+            } // Changed from "value" to "default"
             className="input"
             name="category"
             required
@@ -132,7 +166,9 @@ export function AddSubCategory(
               setSelectedCategory(category);
             }}
           >
-            <option value="value" disabled>
+            <option value="default" disabled>
+              {" "}
+              {/* Changed from "value" to "default" */}
               בחר קטגוריה
             </option>
             {loading ? (

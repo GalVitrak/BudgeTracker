@@ -19,29 +19,23 @@ const addCategory = functions.https.onCall(
     }
 
     try {
-      // Check if category with this name already exists
-      const existingCategory = await db
+      // Check if category with this name already exists for this specific user
+      const existingUserCategory = await db
         .collection("categories")
         .where("name", "==", name)
+        .where("uid", "array-contains", uid)
         .get();
 
-      if (!existingCategory.empty) {
-        // Category exists, add the user's UID if not already present
-        const doc = existingCategory.docs[0];
-        const category = doc.data();
-
-        // Add user to category if not already present
-        if (!category.uid.includes(uid)) {
-          await doc.ref.update({
-            uid: FieldValue.arrayUnion(uid),
-          });
-        }
+      if (!existingUserCategory.empty) {
+        // User already has a category with this name, just return the existing one
+        const doc = existingUserCategory.docs[0];
 
         // Handle subcategories if provided
         if (
           subCategories &&
           subCategories.length > 0
         ) {
+          const category = doc.data();
           const currentSubCategories =
             category.subCategories || [];
 
@@ -84,7 +78,7 @@ const addCategory = functions.https.onCall(
         return doc.id;
       }
 
-      // Create new category
+      // Create new category - each user gets their own category even if names are similar
       const newCategoryRef = await db
         .collection("categories")
         .add({

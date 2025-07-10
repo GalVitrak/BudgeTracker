@@ -44,6 +44,8 @@ export function AddSpending(
     useState(false);
   const [isPayment, setIsPayment] =
     useState<boolean>(false);
+  const [isCash, setIsCash] =
+    useState<boolean>(false);
   const [totalPayments, setTotalPayments] =
     useState<number>(2);
   const [firstPayment, setFirstPayment] =
@@ -91,7 +93,6 @@ export function AddSpending(
 
     try {
       setIsSubmitting(true);
-
 
       if (!uid) {
         notifyService.error({
@@ -144,7 +145,7 @@ export function AddSpending(
           spending.date,
           spending.sum,
           spending.note,
-          ""
+          isCash
         );
 
         await spendingsService.addSpending(
@@ -323,19 +324,33 @@ export function AddSpending(
           </label>
         </div>
 
-        <div className="payment-toggle">
-          <label>תשלומים</label>
-          <Switch
-            checked={isPayment}
-            onChange={(checked) => {
-              setIsPayment(checked);
-              if (!checked) {
-                setTotalPayments(1);
-                setFirstPayment(0);
-              }
-            }}
-          />
-        </div>
+        {!isPayment && (
+          <div className="payment-toggle">
+            <label>תשלום במזומן</label>
+            <Switch
+              checked={isCash}
+              onChange={(checked) => {
+                setIsCash(checked);
+              }}
+            />
+          </div>
+        )}
+
+        {!isCash && (
+          <div className="payment-toggle">
+            <label>תשלומים</label>
+            <Switch
+              checked={isPayment}
+              onChange={(checked) => {
+                setIsPayment(checked);
+                if (!checked) {
+                  setTotalPayments(1);
+                  setFirstPayment(0);
+                }
+              }}
+            />
+          </div>
+        )}
 
         {isPayment && (
           <>
@@ -344,7 +359,6 @@ export function AddSpending(
                 className="input"
                 value={totalPayments}
                 onChange={(e) => {
-
                   setTotalPayments(
                     Number(e.target.value)
                   );
@@ -452,6 +466,9 @@ export function AddSpending(
             setIsAddSubCategoryModalOpen
           }
           preSelectedCategory={selectedCategory}
+          setSelectedCategory={
+            setSelectedCategory
+          }
         />
       </Modal>
     </div>

@@ -109,6 +109,7 @@ function Dashboard(): JSX.Element {
               : dayjs().format("DD.MM.YYYY"),
             Number(data.sum),
             data.note,
+            data.cash || false, // Add the missing cash parameter
             doc.id
           );
         });
@@ -356,6 +357,11 @@ function Dashboard(): JSX.Element {
                       {Number(
                         spending.sum
                       ).toFixed(2)}
+                    </p>
+                    <p className="activity-cash">
+                      {spending.cash
+                        ? "מזומן"
+                        : "אשראי"}
                     </p>
                   </div>
                   <div className="activity-date">

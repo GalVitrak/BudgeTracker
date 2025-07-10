@@ -58,7 +58,8 @@ class SpendingsService {
       subCategory,
       date,
       firstPayment,
-      note + " תשלום 1/" + numberOfPayments
+      note + " תשלום 1/" + numberOfPayments,
+      false
     );
 
     await addSpending(spending).then((result) => {
@@ -91,7 +92,8 @@ class SpendingsService {
           " תשלום " +
           i +
           "/" +
-          numberOfPayments
+          numberOfPayments,
+        false
       );
 
       await addSpending(nextSpending).then(
@@ -129,6 +131,7 @@ class SpendingsService {
       subCategory: spending.subCategory,
       date: date,
       sum: spending.sum,
+      cash: spending.cash,
       note: spending.note,
       year: year,
       month: month,

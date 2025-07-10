@@ -12,6 +12,7 @@ const updateSpending = functions.https.onCall(
       note,
       year,
       month,
+      cash,
     } = data;
 
     if (!spendingId) {
@@ -49,6 +50,7 @@ const updateSpending = functions.https.onCall(
         sum,
         year,
         month,
+        cash,
       };
 
       // Only add note if it exists

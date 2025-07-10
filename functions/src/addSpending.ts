@@ -27,6 +27,7 @@ const addSpending = functions.https.onCall(
       sum,
       note = "",
       isPayment = false,
+      cash,
       totalPayments,
       paymentNumber,
       originalSum,
@@ -71,6 +72,7 @@ const addSpending = functions.https.onCall(
         year,
         month,
         sum,
+        cash,
         note,
         uid,
       };

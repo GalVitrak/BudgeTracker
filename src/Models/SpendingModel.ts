@@ -7,6 +7,7 @@ class SpendingModel {
   year: string | number;
   month: string | number;
   sum: number;
+  cash: boolean;
   note: string;
 
   public constructor(
@@ -16,6 +17,7 @@ class SpendingModel {
     date: string,
     sum: number,
     note: string,
+    cash: boolean,
     id?: string
   ) {
     this.uid = uid;
@@ -26,6 +28,7 @@ class SpendingModel {
     this.month = date.split(".")[1];
     this.sum = sum;
     this.note = note;
+    this.cash = cash;
     this.id = id;
   }
 }

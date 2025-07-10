@@ -45,6 +45,7 @@ interface DataType {
   date: string;
   sum: number;
   note: string;
+  cash: boolean;
 }
 
 // Add this custom hook after the imports and before the component
@@ -153,15 +154,15 @@ export function SpendingTable(): JSX.Element {
             title: "תאריך",
             dataIndex: "date",
             key: "date",
-            width: isMobile ? "20%" : "15%",
+            width: isMobile ? "40%" : "15%",
             align: "center",
           },
           {
             title: "קטגוריה",
             dataIndex: "category",
             key: "category",
-            width: isMobile ? "20%" : "15%",
-            align: "right",
+            width: isMobile ? "0%" : "15%",
+            align: isMobile ? "center" : "right",
             render: (category: string) => (
               <span>
                 {getCategoryEmoji(category)}{" "}
@@ -173,7 +174,7 @@ export function SpendingTable(): JSX.Element {
             title: "תת-קטגוריה",
             dataIndex: "subCategory",
             key: "subCategory",
-            width: isMobile ? "20%" : "15%",
+            width: isMobile ? "0%" : "15%",
             align: "right",
           },
           {
@@ -185,6 +186,15 @@ export function SpendingTable(): JSX.Element {
             className: "sum-column",
             render: (sum: number) =>
               `${Number(sum).toFixed(2)} ₪`,
+          },
+          {
+            title: "תשלום",
+            key: "cash",
+            dataIndex: "cash",
+            width: isMobile ? "40%" : "15%",
+            align: "center",
+            render: (cash: boolean) =>
+              cash ? "מזומן" : "אשראי",
           },
         ];
 
@@ -242,6 +252,7 @@ export function SpendingTable(): JSX.Element {
               .format("DD.MM.YYYY"),
             doc.data().sum,
             doc.data().note,
+            doc.data().cash,
             doc.id
           );
         });
@@ -661,7 +672,10 @@ export function SpendingTable(): JSX.Element {
                             <strong>
                               קטגוריה:
                             </strong>{" "}
-                            {record.category}
+                            {record.category}{" "}
+                            {getCategoryEmoji(
+                              record.category
+                            )}
                           </div>
                           <div className="expanded-item">
                             <strong>
@@ -796,6 +810,7 @@ export function SpendingTable(): JSX.Element {
           modalStateChanger={
             setAddSubCategoryModalOpen
           }
+          setSelectedCategory={() => {}}
         />
       </Modal>
 

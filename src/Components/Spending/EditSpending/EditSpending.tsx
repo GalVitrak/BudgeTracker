@@ -14,6 +14,7 @@ import notifyService from "../../../Services/NotifyService";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import CategoryModel from "../../../Models/CategoryModel";
 import spendingsService from "../../../Services/SpendingsService";
+import { Switch } from "antd";
 
 interface EditSpendingProps {
   modalStateChanger: Function;
@@ -39,6 +40,7 @@ export function EditSpending(
           .split("T")[0],
         sum: props.spending.sum,
         note: props.spending.note,
+        cash: Boolean(props.spending.cash),
       },
     });
 
@@ -130,6 +132,7 @@ export function EditSpending(
 
       spending.date = date;
       spending.id = props.spending.id;
+      console.log(spending);
 
       await spendingsService.updateSpending(
         spending
@@ -292,6 +295,16 @@ export function EditSpending(
           <label className="label" htmlFor="sum">
             סכום
           </label>
+        </div>
+
+        <div className="payment-toggle">
+          <label>תשלום במזומן</label>
+          <Switch
+            checked={props.spending.cash}
+            onChange={(checked) => {
+              setValue("cash", checked);
+            }}
+          />
         </div>
 
         <div className="input-group">
