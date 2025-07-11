@@ -1,6 +1,5 @@
 import * as functions from "firebase-functions/v1";
 import { db } from ".";
-import { FieldValue } from "firebase-admin/firestore";
 
 const addCategory = functions.https.onCall(
   async (data, context) => {
