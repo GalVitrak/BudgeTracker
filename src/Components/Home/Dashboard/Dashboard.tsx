@@ -351,7 +351,7 @@ function Dashboard(): JSX.Element {
             <Card className="stat-card">
               <div className="stat-card-icon">
                 <WalletFilled
-                  style={{ color: "#6b8cce" }}
+                  style={{ color: "#8B4513" }}
                 />
               </div>
               <Statistic

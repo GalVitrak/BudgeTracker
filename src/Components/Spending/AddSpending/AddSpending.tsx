@@ -88,16 +88,6 @@ export function AddSpending(
 
   useEffect(() => {}, [selectedCategory]);
 
-  // Filter subcategories based on user permissions and default status
-  const filterSubCategories = (
-    category: CategoryModel
-  ) => {
-    return category.subCategories.filter(
-      (subCategory) =>
-        subCategory.isDefault === true || // Show default subcategories
-        subCategory.uid?.includes(uid || "") // Show only user's own subcategories
-    );
-  };
 
   async function send(spending: SpendingModel) {
     if (isSubmitting) return;
