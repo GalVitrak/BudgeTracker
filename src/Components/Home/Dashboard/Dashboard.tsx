@@ -70,10 +70,40 @@ function Dashboard(): JSX.Element {
 
   const [totalSpending, setTotalSpending] =
     useState<number>(0);
-  const [highestSpending, setHighestSpending] =
+  const [cashTotal, setCashTotal] =
     useState<number>(0);
-  const [lowestSpending, setLowestSpending] =
+  const [creditTotal, setCreditTotal] =
     useState<number>(0);
+  const [
+    highestCashSpending,
+    setHighestCashSpending,
+  ] = useState<number>(0);
+  const [
+    highestCreditSpending,
+    setHighestCreditSpending,
+  ] = useState<number>(0);
+  const [
+    highestDaySpending,
+    setHighestDaySpending,
+  ] = useState<{ date: string; amount: number }>({
+    date: "",
+    amount: 0,
+  });
+  const [
+    lowestCashSpending,
+    setLowestCashSpending,
+  ] = useState<number>(0);
+  const [
+    lowestCreditSpending,
+    setLowestCreditSpending,
+  ] = useState<number>(0);
+  const [
+    lowestDaySpending,
+    setLowestDaySpending,
+  ] = useState<{ date: string; amount: number }>({
+    date: "",
+    amount: 0,
+  });
   const [recentSpendings, setRecentSpendings] =
     useState<SpendingModel[]>([]);
 
@@ -120,6 +150,7 @@ function Dashboard(): JSX.Element {
       }
 
       if (extractedSpendings.length > 0) {
+        // Calculate totals
         const total = extractedSpendings.reduce(
           (sum, spending) =>
             sum + Number(spending.sum),
@@ -127,20 +158,139 @@ function Dashboard(): JSX.Element {
         );
         setTotalSpending(total);
 
-        const spendingSums =
-          extractedSpendings.map((s) =>
-            Number(s.sum)
+        // Calculate cash and credit totals
+        const cashSpendings =
+          extractedSpendings.filter(
+            (s) => s.cash
           );
-        const highest = Math.max(...spendingSums);
-        setHighestSpending(highest);
+        const creditSpendings =
+          extractedSpendings.filter(
+            (s) => !s.cash
+          );
 
-        const lowest = Math.min(...spendingSums);
-        setLowestSpending(lowest);
+        const cashTotal = cashSpendings.reduce(
+          (sum, spending) =>
+            sum + Number(spending.sum),
+          0
+        );
+        setCashTotal(cashTotal);
+
+        const creditTotal =
+          creditSpendings.reduce(
+            (sum, spending) =>
+              sum + Number(spending.sum),
+            0
+          );
+        setCreditTotal(creditTotal);
+
+        // Calculate highest individual spendings
+        if (cashSpendings.length > 0) {
+          const cashSums = cashSpendings.map(
+            (s) => Number(s.sum)
+          );
+          setHighestCashSpending(
+            Math.max(...cashSums)
+          );
+          setLowestCashSpending(
+            Math.min(...cashSums)
+          );
+        } else {
+          setHighestCashSpending(0);
+          setLowestCashSpending(0);
+        }
+
+        if (creditSpendings.length > 0) {
+          const creditSums = creditSpendings.map(
+            (s) => Number(s.sum)
+          );
+          setHighestCreditSpending(
+            Math.max(...creditSums)
+          );
+          setLowestCreditSpending(
+            Math.min(...creditSums)
+          );
+        } else {
+          setHighestCreditSpending(0);
+          setLowestCreditSpending(0);
+        }
+
+        // Calculate daily totals
+        const dailyTotals: {
+          [date: string]: number;
+        } = {};
+        extractedSpendings.forEach((spending) => {
+          const date = spending.date;
+          dailyTotals[date] =
+            (dailyTotals[date] || 0) +
+            Number(spending.sum);
+        });
+
+        const dailyAmounts = Object.values(
+          dailyTotals
+        ).filter((amount) => amount > 0);
+        const dailyEntries = Object.entries(
+          dailyTotals
+        ).filter(([_, amount]) => amount > 0);
+
+        if (dailyEntries.length > 0) {
+          // Find highest day
+          const maxDailyAmount = Math.max(
+            ...dailyAmounts
+          );
+          const highestDayEntry =
+            dailyEntries.find(
+              ([_, amount]) =>
+                amount === maxDailyAmount
+            );
+          setHighestDaySpending({
+            date: highestDayEntry
+              ? highestDayEntry[0]
+              : "",
+            amount: maxDailyAmount,
+          });
+
+          // Find lowest day
+          const minDailyAmount = Math.min(
+            ...dailyAmounts
+          );
+          const lowestDayEntry =
+            dailyEntries.find(
+              ([_, amount]) =>
+                amount === minDailyAmount
+            );
+          setLowestDaySpending({
+            date: lowestDayEntry
+              ? lowestDayEntry[0]
+              : "",
+            amount: minDailyAmount,
+          });
+        } else {
+          setHighestDaySpending({
+            date: "",
+            amount: 0,
+          });
+          setLowestDaySpending({
+            date: "",
+            amount: 0,
+          });
+        }
       } else {
         setRecentSpendings([]);
         setTotalSpending(0);
-        setHighestSpending(0);
-        setLowestSpending(0);
+        setCashTotal(0);
+        setCreditTotal(0);
+        setHighestCashSpending(0);
+        setHighestCreditSpending(0);
+        setLowestCashSpending(0);
+        setLowestCreditSpending(0);
+        setHighestDaySpending({
+          date: "",
+          amount: 0,
+        });
+        setLowestDaySpending({
+          date: "",
+          amount: 0,
+        });
       }
     }
   }, [spendingSnapshot, error, newSpending]);
@@ -191,9 +341,19 @@ function Dashboard(): JSX.Element {
       </div>
 
       <div className="stats-container">
-        <Row gutter={[8, 8]} justify="center">
+        {/* Row 1: Total Spending Breakdown */}
+        <Row
+          gutter={[8, 8]}
+          justify="center"
+          style={{ marginBottom: "16px" }}
+        >
           <Col xs={24} sm={12} lg={8}>
             <Card className="stat-card">
+              <div className="stat-card-icon">
+                <WalletFilled
+                  style={{ color: "#6b8cce" }}
+                />
+              </div>
               <Statistic
                 title="סה״כ החודש"
                 value={
@@ -203,51 +363,194 @@ function Dashboard(): JSX.Element {
                 }
                 valueStyle={{ color: "#6b8cce" }}
                 precision={2}
-                prefix={
-                  <>
-                    <WalletFilled className="total-icon" />{" "}
-                    ₪
-                  </>
-                }
+                prefix="₪"
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={8}>
             <Card className="stat-card">
+              <div className="stat-card-icon">
+                💵
+              </div>
               <Statistic
-                title="הוצאה גבוהה ביותר"
+                title="סה״כ מזומן"
+                value={
+                  loading ? "טוען..." : cashTotal
+                }
+                valueStyle={{ color: "#52c41a" }}
+                precision={2}
+                prefix="₪"
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="stat-card">
+              <div className="stat-card-icon">
+                💳
+              </div>
+              <Statistic
+                title="סה״כ אשראי"
                 value={
                   loading
                     ? "טוען..."
-                    : highestSpending
+                    : creditTotal
+                }
+                valueStyle={{ color: "#1890ff" }}
+                precision={2}
+                prefix="₪"
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Row 2: Highest Spending */}
+        <Row
+          gutter={[8, 8]}
+          justify="center"
+          style={{ marginBottom: "16px" }}
+        >
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="stat-card">
+              <div className="stat-card-icon">
+                📅
+              </div>
+              <Statistic
+                title={`יום עם הכי הרבה הוצאות${
+                  highestDaySpending.date
+                    ? ` (${highestDaySpending.date})`
+                    : ""
+                }`}
+                value={
+                  loading
+                    ? "טוען..."
+                    : highestDaySpending.amount
                 }
                 valueStyle={{ color: "#ff4d4f" }}
                 precision={2}
-                prefix={
-                  <>
-                    <RiseOutlined className="highest-icon" />{" "}
-                    ₪
-                  </>
-                }
+                prefix="₪"
               />
             </Card>
           </Col>
           <Col xs={24} sm={12} lg={8}>
             <Card className="stat-card">
+              <div className="stat-card-icon">
+                💵
+                <RiseOutlined
+                  style={{ color: "#ff4d4f" }}
+                />
+              </div>
               <Statistic
-                title="הוצאה נמוכה ביותר"
+                title="הוצאה גבוהה במזומן"
                 value={
                   loading
                     ? "טוען..."
-                    : lowestSpending
+                    : highestCashSpending
+                }
+                valueStyle={{ color: "#ff4d4f" }}
+                precision={2}
+                prefix="₪"
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="stat-card">
+              <div className="stat-card-icon">
+                💳
+                <RiseOutlined
+                  style={{ color: "#ff4d4f" }}
+                />
+              </div>
+              <Statistic
+                title="הוצאה גבוהה באשראי"
+                value={
+                  loading
+                    ? "טוען..."
+                    : highestCreditSpending
+                }
+                valueStyle={{ color: "#ff4d4f" }}
+                precision={2}
+                prefix="₪"
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Row 3: Lowest Spending */}
+        <Row gutter={[8, 8]} justify="center">
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="stat-card">
+              <div className="stat-card-icon">
+                📅
+              </div>
+              <Statistic
+                title={`יום עם הכי מעט הוצאות${
+                  lowestDaySpending.date
+                    ? ` (${lowestDaySpending.date})`
+                    : ""
+                }`}
+                value={
+                  loading
+                    ? "טוען..."
+                    : lowestDaySpending.amount ||
+                      "אין"
                 }
                 valueStyle={{ color: "#52c41a" }}
                 precision={2}
                 prefix={
-                  <>
-                    <FallOutlined className="lowest-icon" />{" "}
-                    ₪
-                  </>
+                  lowestDaySpending.amount > 0
+                    ? "₪"
+                    : ""
+                }
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="stat-card">
+              <div className="stat-card-icon">
+                💵
+                <FallOutlined
+                  style={{ color: "#52c41a" }}
+                />
+              </div>
+              <Statistic
+                title="הוצאה נמוכה במזומן"
+                value={
+                  loading
+                    ? "טוען..."
+                    : lowestCashSpending || "אין"
+                }
+                valueStyle={{ color: "#52c41a" }}
+                precision={2}
+                prefix={
+                  lowestCashSpending > 0
+                    ? "₪"
+                    : ""
+                }
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="stat-card">
+              <div className="stat-card-icon">
+                💳
+                <FallOutlined
+                  style={{ color: "#52c41a" }}
+                />
+              </div>
+              <Statistic
+                title="הוצאה נמוכה באשראי"
+                value={
+                  loading
+                    ? "טוען..."
+                    : lowestCreditSpending ||
+                      "אין"
+                }
+                valueStyle={{ color: "#52c41a" }}
+                precision={2}
+                prefix={
+                  lowestCreditSpending > 0
+                    ? "₪"
+                    : ""
                 }
               />
             </Card>

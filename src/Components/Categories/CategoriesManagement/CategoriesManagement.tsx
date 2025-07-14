@@ -238,9 +238,8 @@ export function CategoriesManagement(): JSX.Element {
   ) => {
     return category.subCategories.filter(
       (subCategory) =>
-        subCategory.uid?.includes(uid || "") ||
-        subCategory.uid?.includes("allUsers") ||
-        category.uid?.includes("allUsers")
+        subCategory.isDefault || // Show if it's a default subcategory
+        subCategory.uid?.includes(uid || "") // Show if user's UID is in subcategory's UID array
     );
   };
 

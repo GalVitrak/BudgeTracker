@@ -79,6 +79,9 @@ export function EditSpending(
     selectedSubCategory,
     setSelectedSubCategory,
   ] = useState(props.spending.subCategory);
+  const [isCash, setIsCash] = useState<boolean>(
+    Boolean(props.spending.cash)
+  );
 
   useEffect(() => {
     if (categories && categories.length > 0) {
@@ -300,8 +303,9 @@ export function EditSpending(
         <div className="payment-toggle">
           <label>תשלום במזומן</label>
           <Switch
-            checked={props.spending.cash}
+            checked={isCash}
             onChange={(checked) => {
+              setIsCash(checked);
               setValue("cash", checked);
             }}
           />

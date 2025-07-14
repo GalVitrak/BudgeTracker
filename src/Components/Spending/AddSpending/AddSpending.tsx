@@ -88,6 +88,17 @@ export function AddSpending(
 
   useEffect(() => {}, [selectedCategory]);
 
+  // Filter subcategories based on user permissions and default status
+  const filterSubCategories = (
+    category: CategoryModel
+  ) => {
+    return category.subCategories.filter(
+      (subCategory) =>
+        subCategory.isDefault === true || // Show default subcategories
+        subCategory.uid?.includes(uid || "") // Show only user's own subcategories
+    );
+  };
+
   async function send(spending: SpendingModel) {
     if (isSubmitting) return;
 
@@ -261,16 +272,25 @@ export function AddSpending(
             <option value="default" disabled>
               בחר תת-קטגוריה
             </option>
-            {selectedCategory?.subCategories?.map(
-              (subCategory) => (
+            {selectedCategory?.subCategories
+              ?.filter(
+                (subCategory) =>
+                  subCategory.isDefault ===
+                    true || // Show default subcategories
+                  subCategory.uid?.includes(
+                    uid || ""
+                  ) // Show only user's own subcategories
+              )
+              .map((subCategory, index) => (
                 <option
-                  key={`${selectedCategory.id}-${subCategory.name}`}
+                  key={`subcategory-${
+                    selectedCategory.id || "noId"
+                  }-${index}-${subCategory.name}`}
                   value={subCategory.name}
                 >
                   {subCategory.name}
                 </option>
-              )
-            )}
+              ))}
             {selectedCategory && (
               <option
                 value="new"

@@ -12,6 +12,7 @@ export function getCategoryEmoji(
     לימודים: "📚",
     "חיות מחמד": "🐾",
     מנויים: "📺",
+    טיפוח: "💆",
     אחר: "📌",
   };
   return emojiMap[category] || "📌";

@@ -151,6 +151,17 @@ export function BudgetPage(): JSX.Element {
     useState<Set<string>>(new Set());
   const uid = authStore.getState().user?.uid;
 
+  // Filter subcategories based on user permissions and default status
+  const filterSubCategories = (
+    subCategories: any[]
+  ) => {
+    return subCategories.filter(
+      (subCategory) =>
+        subCategory.isDefault || // Show if it's a default subcategory
+        subCategory.uid?.includes(uid || "") // Show if user's UID is in subcategory's UID array
+    );
+  };
+
   // Fetch categories
   const categoriesRef = collection(
     db,
@@ -388,16 +399,16 @@ export function BudgetPage(): JSX.Element {
             category.id,
             category.name,
             existingBudget?.monthlyBudget || 0,
-            category.subCategories?.map(
-              (sub) => ({
-                name: sub.name,
-                budget:
-                  existingBudget?.subCategories?.find(
-                    (s: { name: string }) =>
-                      s.name === sub.name
-                  )?.budget || 0,
-              })
-            ) || []
+            filterSubCategories(
+              category.subCategories || []
+            ).map((sub) => ({
+              name: sub.name,
+              budget:
+                existingBudget?.subCategories?.find(
+                  (s: { name: string }) =>
+                    s.name === sub.name
+                )?.budget || 0,
+            }))
           );
         }
       );
@@ -414,12 +425,12 @@ export function BudgetPage(): JSX.Element {
             category.id,
             category.name,
             0,
-            category.subCategories?.map(
+            filterSubCategories(category.subCategories || []).map(
               (sub) => ({
                 name: sub.name,
                 budget: 0,
               })
-            ) || []
+            )
           )
       );
       setBudgets(newBudgets);
